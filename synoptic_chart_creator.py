@@ -2813,6 +2813,52 @@ else:
     html = html[:start] + new_fn + html[end:]
     print('synSavePNG replaced')
 
+# ── Strip wx-color rects for METAR exports ────────────────────────────
+import re
+_bw = re.sub(
+    r'\\u003crect [^\\]*?fill=\\u0022#(?!fff|FFF|1a2030|1a4a8a|1a3a6a)[0-9a-fA-F]{6}\\u0022[^\\]*?/\\u003e',
+    '',
+    _ts_json_str
+)
+html = html.replace(
+    'var _SYN_TS_DATA = ',
+    'var _SYN_TS_DATA_BW = ' + _bw + ';\nvar _SYN_TS_DATA = '
+)
+print('B&W station data injected')
+
+# ── Patch synExportMetar to swap in B&W data ──────────────────────────
+html = html.replace(
+    'function synExportMetar() {\n  var hadSlp = _synShowSlp, hadHL = _synShowHL;',
+    'function synExportMetar() {\n'
+    '  var _origData = _SYN_TS_DATA;\n'
+    '  _SYN_TS_DATA = _SYN_TS_DATA_BW;\n'
+    '  var _cur = document.getElementById("ts-select").value;\n'
+    '  synUpdateTS(_cur);\n'
+    '  var hadSlp = _synShowSlp, hadHL = _synShowHL;'
+)
+html = html.replace(
+    'function synExportCurrentMetar() {\n  var hadSlp = _synShowSlp, hadHL = _synShowHL;',
+    'function synExportCurrentMetar() {\n'
+    '  var _origData = _SYN_TS_DATA;\n'
+    '  _SYN_TS_DATA = _SYN_TS_DATA_BW;\n'
+    '  var _cur = document.getElementById("ts-select").value;\n'
+    '  synUpdateTS(_cur);\n'
+    '  var hadSlp = _synShowSlp, hadHL = _synShowHL;'
+)
+html = html.replace(
+    '      window._synMetarPNG = false;\n    }, 3000);\n  }, 200);\n}\nfunction synExportCurrentMetar',
+    '      _SYN_TS_DATA = _origData;\n'
+    '      window._synMetarPNG = false;\n    }, 3000);\n  }, 200);\n}\nfunction synExportCurrentMetar'
+)
+html = html.replace(
+    '      window._synMetarPNG = false;\n    }, 3000);\n  }, 200);\n}\n</script>',
+    '      _SYN_TS_DATA = _origData;\n'
+    '      window._synMetarPNG = false;\n    }, 3000);\n  }, 200);\n}\n</script>'
+)
+print('METAR B&W swap patched')
+
+
+
 # ── Hide contours and H/L ─────────────────────────────────────────────
 html = html.replace('var _synShowSlp = true;', 'var _synShowSlp = false;')
 html = html.replace('var _synShowHL  = true;', 'var _synShowHL  = false;')
