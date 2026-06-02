@@ -3,16 +3,13 @@ name: Synoptic Chart
 on:
   # ── Manual trigger (the "Run workflow" button in the Actions tab) ──────────
   workflow_dispatch:
-    inputs:
-      export_time:
-        description: "Chart export time label (e.g. 1200Z, 1800Z)"
-        required: false
-        default: "1200Z"
 
   # ── Scheduled runs ────────────────────────────────────────────────────────
   schedule:
-    - cron: "37 13 * * *"   # 13:37 UTC daily
-    - cron: "37 18 * * *"   # 18:37 UTC daily
+    - cron: "37  0 * * *"   # 00:37 UTC daily  → 00Z data
+    - cron: "37  6 * * *"   # 06:37 UTC daily  → 06Z data
+    - cron: "37 13 * * *"   # 13:37 UTC daily  → 12Z data
+    - cron: "37 18 * * *"   # 18:37 UTC daily  → 18Z data
 
 jobs:
   build:
@@ -40,18 +37,17 @@ jobs:
           pip install --upgrade pip
           pip install -r requirements.txt
 
-      # ── 4. Set EXPORT_TIME env var ────────────────────────────────────
-      #       Scheduled 13:37 run → 1200Z ; 18:37 run → 1800Z
-      #       Manual run          → whatever the user typed in the input
+      # ── 4. Set EXPORT_TIME env var ─────────────────────────────────────
+      #       Always auto-detected from UTC hour — applies to both
+      #       scheduled runs and manual workflow_dispatch triggers.
       - name: Determine export time
         id: export_time
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "EXPORT_TIME=${{ github.event.inputs.export_time }}" >> "$GITHUB_ENV"
-          elif [ "${{ github.event.schedule }}" = "37 13 * * *" ]; then
-            echo "EXPORT_TIME=1200Z" >> "$GITHUB_ENV"
-          else
-            echo "EXPORT_TIME=1800Z" >> "$GITHUB_ENV"
+          _h=$(date -u +"%H")
+          if   [ "$_h" -lt  6 ]; then echo "EXPORT_TIME=0000Z" >> "$GITHUB_ENV"
+          elif [ "$_h" -lt 12 ]; then echo "EXPORT_TIME=0600Z" >> "$GITHUB_ENV"
+          elif [ "$_h" -lt 18 ]; then echo "EXPORT_TIME=1200Z" >> "$GITHUB_ENV"
+          else                        echo "EXPORT_TIME=1800Z" >> "$GITHUB_ENV"
           fi
 
       # ── 5. Create output directory ──────────────────────────────────────
