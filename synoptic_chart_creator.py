@@ -2609,15 +2609,14 @@ with open('output/synoptic_map.html', 'r', encoding='utf-8') as f:
 new_fn = '''function synSavePNG() {
   var btn    = document.getElementById("btn-save-png");
   var status = document.getElementById("save-status");
-  btn.disabled = true;
-  btn.textContent = "Capturing...";
-  status.textContent = "";
+  if (btn) { btn.disabled = true; btn.textContent = "Capturing..."; }
+  if (status) status.textContent = "";
 
   var keys = Object.keys(window).filter(function(k){ return k.startsWith("map_"); });
-  if (!keys.length) { status.textContent="Map not found"; btn.disabled=false; return; }
+  if (!keys.length) { if(status) status.textContent="Map not found"; if(btn) btn.disabled=false; return; }
   var MAP   = window[keys[0]];
   var mapEl = document.getElementById(keys[0]) || document.querySelector(".leaflet-container");
-  if (!mapEl) { status.textContent="Map el not found"; btn.disabled=false; return; }
+  if (!mapEl) { if(status) status.textContent="Map el not found"; if(btn) btn.disabled=false; return; }
 
   var hideEls = [
     mapEl.querySelector(".leaflet-control-container"),
@@ -2643,8 +2642,7 @@ new_fn = '''function synSavePNG() {
     mapEl.style.width  = origW;
     mapEl.style.height = origH;
     MAP.invalidateSize();
-    btn.disabled = false;
-    btn.textContent = "Save PNG";
+    if (btn) { btn.disabled = false; btn.textContent = "Save PNG"; }
   }
 
   mapEl.style.width  = TARGET_W + "px";
@@ -2785,13 +2783,12 @@ new_fn = '''function synSavePNG() {
         link.href = out.toDataURL("image/png");
         link.click();
         restore();
-        status.textContent = "Saved!";
-        setTimeout(function(){ status.textContent = ""; }, 3000);
+        if (status) { status.textContent = "Saved!"; setTimeout(function(){ status.textContent = ""; }, 3000); }
 
       }).catch(function(e) {
         hideEls.forEach(function(el, i){ el.style.visibility = prevVis[i]; });
         restore();
-        status.textContent = "Failed: " + e.message;
+        if (status) status.textContent = "Failed: " + e.message;
       });
     }, 300);
   }, 200);
@@ -2892,6 +2889,31 @@ function synExportMetar() {
   <button onclick="synExportCurrentMetar()" style="font-family:Courier New,monospace;font-size:12px;
     padding:5px 12px;background:#e8f4e8;border:1px solid #2a7a3a;border-radius:5px;
     color:#1a4a1a;cursor:pointer;font-weight:bold;">&#128225; Export Current Timestep METAR PNG</button>
+  <button onclick="synShowRunPanel()" style="font-family:Courier New,monospace;font-size:12px;
+    padding:5px 12px;background:#f0e8f8;border:1px solid #6a2a9a;border-radius:5px;
+    color:#3a006a;cursor:pointer;font-weight:bold;">&#9881; Run Script Now</button>
+  <div id="gha-panel" style="display:none;flex-direction:row;align-items:center;gap:6px;padding:5px 10px;
+    background:#faf8ff;border:1px solid #9a6acc;border-radius:5px;">
+    <span style="color:#555;font-size:11px;font-family:Courier New,monospace;">PIN</span>
+    <input id="gha-pin" type="password" maxlength="4" placeholder="····"
+      onkeydown="if(event.key==='Enter')synTriggerGHA()"
+      style="width:52px;font-family:Courier New,monospace;font-size:12px;padding:3px 5px;
+      border:1px solid #9a6acc;border-radius:3px;text-align:center;"/>
+    <button onclick="synTriggerGHA()" style="padding:3px 10px;background:#7a2acc;border:none;
+      border-radius:3px;color:white;cursor:pointer;font-family:Courier New,monospace;font-size:11px;font-weight:bold;">&#9889; Run</button>
+    <span id="gha-status" style="color:#555;font-size:10px;font-family:Courier New,monospace;"></span>
+  </div>
+  <div id="gha-progress" style="display:none;flex-direction:column;gap:3px;padding:6px 10px;
+    background:#faf8ff;border:1px solid #9a6acc;border-radius:5px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <b style="color:#3a006a;font-family:Courier New,monospace;font-size:11px;">&#128640; Workflow Progress</b>
+      <span id="gha-run-status" style="color:#888;font-size:10px;font-family:Courier New,monospace;"></span>
+    </div>
+    <div style="background:#e8e0f0;border-radius:3px;height:6px;overflow:hidden;">
+      <div id="gha-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#7a2acc,#a855f7);border-radius:3px;transition:width 0.6s ease;"></div>
+    </div>
+    <div id="gha-steps" style="display:flex;flex-direction:column;gap:2px;font-family:Courier New,monospace;font-size:10px;"></div>
+  </div>
 </div>'''.replace('{BTN_BG}', _btn_bg).replace('{BTN_BDR}', _btn_bdr).replace('{BTN_CLR}', _btn_clr)
 
 
@@ -3984,15 +4006,14 @@ with open('output/synoptic_map.html', 'r', encoding='utf-8') as f:
 new_fn = '''function synSavePNG() {
   var btn    = document.getElementById("btn-save-png");
   var status = document.getElementById("save-status");
-  btn.disabled = true;
-  btn.textContent = "Capturing...";
-  status.textContent = "";
+  if (btn) { btn.disabled = true; btn.textContent = "Capturing..."; }
+  if (status) status.textContent = "";
 
   var keys = Object.keys(window).filter(function(k){ return k.startsWith("map_"); });
-  if (!keys.length) { status.textContent="Map not found"; btn.disabled=false; return; }
+  if (!keys.length) { if(status) status.textContent="Map not found"; if(btn) btn.disabled=false; return; }
   var MAP   = window[keys[0]];
   var mapEl = document.getElementById(keys[0]) || document.querySelector(".leaflet-container");
-  if (!mapEl) { status.textContent="Map el not found"; btn.disabled=false; return; }
+  if (!mapEl) { if(status) status.textContent="Map el not found"; if(btn) btn.disabled=false; return; }
 
   var hideEls = [
     mapEl.querySelector(".leaflet-control-container"),
@@ -4018,8 +4039,7 @@ new_fn = '''function synSavePNG() {
     mapEl.style.width  = origW;
     mapEl.style.height = origH;
     MAP.invalidateSize();
-    btn.disabled = false;
-    btn.textContent = "Save PNG";
+    if (btn) { btn.disabled = false; btn.textContent = "Save PNG"; }
   }
 
   mapEl.style.width  = TARGET_W + "px";
@@ -4160,13 +4180,12 @@ new_fn = '''function synSavePNG() {
         link.href = out.toDataURL("image/png");
         link.click();
         restore();
-        status.textContent = "Saved!";
-        setTimeout(function(){ status.textContent = ""; }, 3000);
+        if (status) { status.textContent = "Saved!"; setTimeout(function(){ status.textContent = ""; }, 3000); }
 
       }).catch(function(e) {
         hideEls.forEach(function(el, i){ el.style.visibility = prevVis[i]; });
         restore();
-        status.textContent = "Failed: " + e.message;
+        if (status) status.textContent = "Failed: " + e.message;
       });
     }, 300);
   }, 200);
@@ -4267,6 +4286,31 @@ function synExportMetar() {
   <button onclick="synExportCurrentMetar()" style="font-family:Courier New,monospace;font-size:12px;
     padding:5px 12px;background:#e8f4e8;border:1px solid #2a7a3a;border-radius:5px;
     color:#1a4a1a;cursor:pointer;font-weight:bold;">&#128225; Export Current Timestep METAR PNG</button>
+  <button onclick="synShowRunPanel()" style="font-family:Courier New,monospace;font-size:12px;
+    padding:5px 12px;background:#f0e8f8;border:1px solid #6a2a9a;border-radius:5px;
+    color:#3a006a;cursor:pointer;font-weight:bold;">&#9881; Run Script Now</button>
+  <div id="gha-panel" style="display:none;flex-direction:row;align-items:center;gap:6px;padding:5px 10px;
+    background:#faf8ff;border:1px solid #9a6acc;border-radius:5px;">
+    <span style="color:#555;font-size:11px;font-family:Courier New,monospace;">PIN</span>
+    <input id="gha-pin" type="password" maxlength="4" placeholder="····"
+      onkeydown="if(event.key==='Enter')synTriggerGHA()"
+      style="width:52px;font-family:Courier New,monospace;font-size:12px;padding:3px 5px;
+      border:1px solid #9a6acc;border-radius:3px;text-align:center;"/>
+    <button onclick="synTriggerGHA()" style="padding:3px 10px;background:#7a2acc;border:none;
+      border-radius:3px;color:white;cursor:pointer;font-family:Courier New,monospace;font-size:11px;font-weight:bold;">&#9889; Run</button>
+    <span id="gha-status" style="color:#555;font-size:10px;font-family:Courier New,monospace;"></span>
+  </div>
+  <div id="gha-progress" style="display:none;flex-direction:column;gap:3px;padding:6px 10px;
+    background:#faf8ff;border:1px solid #9a6acc;border-radius:5px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <b style="color:#3a006a;font-family:Courier New,monospace;font-size:11px;">&#128640; Workflow Progress</b>
+      <span id="gha-run-status" style="color:#888;font-size:10px;font-family:Courier New,monospace;"></span>
+    </div>
+    <div style="background:#e8e0f0;border-radius:3px;height:6px;overflow:hidden;">
+      <div id="gha-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#7a2acc,#a855f7);border-radius:3px;transition:width 0.6s ease;"></div>
+    </div>
+    <div id="gha-steps" style="display:flex;flex-direction:column;gap:2px;font-family:Courier New,monospace;font-size:10px;"></div>
+  </div>
 </div>'''.replace('{BTN_BG}', _btn_bg).replace('{BTN_BDR}', _btn_bdr).replace('{BTN_CLR}', _btn_clr)
 
 
@@ -4293,15 +4337,14 @@ with open('output/synoptic_map.html', 'r', encoding='utf-8') as f:
 new_fn = '''function synSavePNG() {
   var btn    = document.getElementById("btn-save-png");
   var status = document.getElementById("save-status");
-  btn.disabled = true;
-  btn.textContent = "Capturing...";
-  status.textContent = "";
+  if (btn) { btn.disabled = true; btn.textContent = "Capturing..."; }
+  if (status) status.textContent = "";
 
   var keys = Object.keys(window).filter(function(k){ return k.startsWith("map_"); });
-  if (!keys.length) { status.textContent="Map not found"; btn.disabled=false; return; }
+  if (!keys.length) { if(status) status.textContent="Map not found"; if(btn) btn.disabled=false; return; }
   var MAP   = window[keys[0]];
   var mapEl = document.getElementById(keys[0]) || document.querySelector(".leaflet-container");
-  if (!mapEl) { status.textContent="Map el not found"; btn.disabled=false; return; }
+  if (!mapEl) { if(status) status.textContent="Map el not found"; if(btn) btn.disabled=false; return; }
 
   var hideEls = [
     mapEl.querySelector(".leaflet-control-container"),
@@ -4330,8 +4373,7 @@ new_fn = '''function synSavePNG() {
     mapEl.style.width  = origW;
     mapEl.style.height = origH;
     MAP.invalidateSize();
-    btn.disabled = false;
-    btn.textContent = "Save PNG";
+    if (btn) { btn.disabled = false; btn.textContent = "Save PNG"; }
   }
 
   // Step 1: resize
@@ -4484,13 +4526,12 @@ new_fn = '''function synSavePNG() {
         link.click();
 
         restore();
-        status.textContent = "Saved!";
-        setTimeout(function(){ status.textContent = ""; }, 3000);
+        if (status) { status.textContent = "Saved!"; setTimeout(function(){ status.textContent = ""; }, 3000); }
 
       }).catch(function(e) {
         hideEls.forEach(function(el, i){ el.style.visibility = prevVis[i]; });
         restore();
-        status.textContent = "Failed: " + e.message;
+        if (status) status.textContent = "Failed: " + e.message;
       });
 
     }, 300); // settle after setView
@@ -4579,6 +4620,99 @@ function synExportMetar() {
     }, 3000);
   }, 200);
 }
+var _ghaPollTimer=null; var _ghaRunId=null; var _ghaTok=null;
+var _ghaSteps=[
+  {name:"Checkout repository",       label:"Checkout"},
+  {name:"Set up Python 3.11",        label:"Setup Python"},
+  {name:"Install Python packages",   label:"Install packages"},
+  {name:"Determine export time",     label:"Detect export time"},
+  {name:"Cache station list",        label:"Cache station CSV"},
+  {name:"Generate synoptic_map.html",label:"Generate chart"},
+  {name:"Publish to GitHub Pages",   label:"Publish to Pages"},
+  {name:"Upload chart as artifact",  label:"Upload artifact"},
+  {name:"Commit and push",           label:"Commit & push"}
+];
+function synShowRunPanel() {
+  var p=document.getElementById("gha-panel");
+  p.style.display=p.style.display==="flex"?"none":"flex";
+  if(p.style.display==="flex") setTimeout(function(){document.getElementById("gha-pin").focus();},50);
+}
+function synBuildStepRows() {
+  var c=document.getElementById("gha-steps"); c.innerHTML="";
+  _ghaSteps.forEach(function(s,i) {
+    var row=document.createElement("div");
+    row.style.cssText="display:flex;align-items:center;gap:5px;";
+    row.innerHTML='<span id="gha-si-'+i+'" style="font-size:11px;color:#ccc;">&#9711;</span>'
+      +'<span style="color:#555;flex:1;">'+s.label+'</span>'
+      +'<span id="gha-st-'+i+'" style="color:#aaa;font-size:10px;min-width:55px;text-align:right;"></span>';
+    c.appendChild(row);
+  });
+}
+function synUpdateStepIcon(i,conclusion,status) {
+  var ic=document.getElementById("gha-si-"+i);
+  var tl=document.getElementById("gha-st-"+i);
+  if(!ic) return;
+  if(conclusion==="success"){ic.innerHTML="&#10003;";ic.style.color="#1a7a2a";}
+  else if(conclusion==="failure"||conclusion==="cancelled"){ic.innerHTML="&#10007;";ic.style.color="#aa2222";}
+  else if(conclusion==="skipped"){ic.innerHTML="&#8212;";ic.style.color="#aaa";}
+  else if(status==="in_progress"){ic.innerHTML="&#9654;";ic.style.color="#7a2acc";}
+  else{ic.innerHTML="&#9711;";ic.style.color="#ccc";}
+  if(tl) tl.textContent=conclusion||(status==="in_progress"?"running":"");
+}
+function synPollRun() {
+  if(!_ghaRunId||!_ghaTok) return;
+  var base="https://api.github.com/repos/ngsmetadvisor/SfcMap";
+  var hdr={Authorization:"Bearer "+_ghaTok,Accept:"application/vnd.github+json"};
+  fetch(base+"/actions/runs/"+_ghaRunId+"/jobs",{headers:hdr})
+  .then(function(r){return r.json();})
+  .then(function(d){
+    var job=(d.jobs||[])[0]; if(!job) return;
+    var rs=document.getElementById("gha-run-status");
+    if(rs) rs.textContent=job.status+(job.conclusion?" \u2192 "+job.conclusion:"");
+    var done=0;
+    _ghaSteps.forEach(function(gs,i){
+      var m=(job.steps||[]).find(function(s){return s.name===gs.name;});
+      if(m){ synUpdateStepIcon(i,m.conclusion,m.status); if(m.conclusion&&m.conclusion!=="skipped") done++; }
+    });
+    var bar=document.getElementById("gha-bar");
+    if(bar) bar.style.width=Math.round((done/_ghaSteps.length)*100)+"%";
+    if(job.status==="completed"){
+      clearInterval(_ghaPollTimer); _ghaPollTimer=null;
+      if(bar&&job.conclusion==="success"){bar.style.width="100%";bar.style.background="linear-gradient(90deg,#1a7a2a,#22c55e)";}
+      else if(bar) bar.style.background="#aa2222";
+      var st=document.getElementById("gha-status");
+      if(st&&job.conclusion==="success"){st.style.color="#1a6a2a";st.textContent="\u2713 Done! Reload to see update.";}
+      else if(st){st.style.color="#aa2222";st.textContent="Workflow "+job.conclusion+".";}
+    }
+  }).catch(function(){});
+}
+function synTriggerGHA() {
+  var pin=document.getElementById("gha-pin").value.trim();
+  var st=document.getElementById("gha-status");
+  if(pin.length!==4){st.style.color="#aa2222";st.textContent="Enter 4-char suffix.";return;}
+  _ghaTok="ghp_5te1jZS2kbyfzeYUANY6CebGtQGpza2j"+pin;
+  st.style.color="#555";st.textContent="Dispatching...";
+  var base="https://api.github.com/repos/ngsmetadvisor/SfcMap";
+  var hdr={Authorization:"Bearer "+_ghaTok,Accept:"application/vnd.github+json","Content-Type":"application/json"};
+  fetch(base+"/actions/workflows/synoptic_chart.yml/dispatches",{
+    method:"POST",headers:hdr,body:JSON.stringify({ref:"main"})
+  }).then(function(r){
+    if(r.status!==204){return r.text().then(function(t){st.style.color="#aa2222";st.textContent="Error "+r.status+": "+t.slice(0,100);_ghaTok=null;});}
+    st.textContent="Queued \u2014 finding run...";
+    document.getElementById("gha-pin").value="";
+    document.getElementById("gha-progress").style.display="flex";
+    synBuildStepRows();
+    setTimeout(function(){
+      fetch(base+"/actions/runs?event=workflow_dispatch&per_page=5",{headers:hdr})
+      .then(function(r){return r.json();})
+      .then(function(d){
+        _ghaRunId=(d.workflow_runs||[]).length?(d.workflow_runs[0].id):null;
+        if(_ghaRunId){st.textContent="";_ghaPollTimer=setInterval(synPollRun,5000);synPollRun();}
+        else{st.textContent="Could not find run ID.";}
+      }).catch(function(){});
+    },4000);
+  }).catch(function(e){st.style.color="#aa2222";st.textContent="Network error: "+e.message;_ghaTok=null;});
+}
 </script>
 <div style="position:fixed;top:10px;right:10px;z-index:10002;display:flex;flex-direction:column;gap:6px;">
   <button onclick="synExport1200Z()" style="font-family:Courier New,monospace;font-size:12px;
@@ -4593,6 +4727,31 @@ function synExportMetar() {
   <button onclick="synExportCurrentMetar()" style="font-family:Courier New,monospace;font-size:12px;
     padding:5px 12px;background:#e8f4e8;border:1px solid #2a7a3a;border-radius:5px;
     color:#1a4a1a;cursor:pointer;font-weight:bold;">&#128225; Export Current Timestep METAR PNG</button>
+  <button onclick="synShowRunPanel()" style="font-family:Courier New,monospace;font-size:12px;
+    padding:5px 12px;background:#f0e8f8;border:1px solid #6a2a9a;border-radius:5px;
+    color:#3a006a;cursor:pointer;font-weight:bold;">&#9881; Run Script Now</button>
+  <div id="gha-panel" style="display:none;flex-direction:row;align-items:center;gap:6px;padding:5px 10px;
+    background:#faf8ff;border:1px solid #9a6acc;border-radius:5px;">
+    <span style="color:#555;font-size:11px;font-family:Courier New,monospace;">PIN</span>
+    <input id="gha-pin" type="password" maxlength="4" placeholder="····"
+      onkeydown="if(event.key==='Enter')synTriggerGHA()"
+      style="width:52px;font-family:Courier New,monospace;font-size:12px;padding:3px 5px;
+      border:1px solid #9a6acc;border-radius:3px;text-align:center;"/>
+    <button onclick="synTriggerGHA()" style="padding:3px 10px;background:#7a2acc;border:none;
+      border-radius:3px;color:white;cursor:pointer;font-family:Courier New,monospace;font-size:11px;font-weight:bold;">&#9889; Run</button>
+    <span id="gha-status" style="color:#555;font-size:10px;font-family:Courier New,monospace;"></span>
+  </div>
+  <div id="gha-progress" style="display:none;flex-direction:column;gap:3px;padding:6px 10px;
+    background:#faf8ff;border:1px solid #9a6acc;border-radius:5px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <b style="color:#3a006a;font-family:Courier New,monospace;font-size:11px;">&#128640; Workflow Progress</b>
+      <span id="gha-run-status" style="color:#888;font-size:10px;font-family:Courier New,monospace;"></span>
+    </div>
+    <div style="background:#e8e0f0;border-radius:3px;height:6px;overflow:hidden;">
+      <div id="gha-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#7a2acc,#a855f7);border-radius:3px;transition:width 0.6s ease;"></div>
+    </div>
+    <div id="gha-steps" style="display:flex;flex-direction:column;gap:2px;font-family:Courier New,monospace;font-size:10px;"></div>
+  </div>
 </div>'''.replace('{BTN_BG}', _btn_bg).replace('{BTN_BDR}', _btn_bdr).replace('{BTN_CLR}', _btn_clr)
 
 
