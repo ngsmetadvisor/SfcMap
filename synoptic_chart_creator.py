@@ -2595,7 +2595,10 @@ display(HTML(
 # ── Cell 11 ────────────────────────────────────────────────────────────────
 from datetime import datetime, timezone
 _utc_hour = datetime.now(timezone.utc).hour
-EXPORT_TIME = "1800Z" if (_utc_hour >= 19 or _utc_hour < 13) else "1200Z"
+if   _utc_hour <  6: EXPORT_TIME = "0000Z"
+elif _utc_hour < 12: EXPORT_TIME = "0600Z"
+elif _utc_hour < 18: EXPORT_TIME = "1200Z"
+else:                EXPORT_TIME = "1800Z"
 print(f'UTC hour: {_utc_hour}  →  default export: {EXPORT_TIME}')
 with open('output/synoptic_map.html', 'r', encoding='utf-8') as f:
 
@@ -2821,9 +2824,9 @@ import re
 html = re.sub(r'<script>\s*function synExport1200Z[\s\S]*?</script>\s*<div[^>]*>.*?</div>', '', html, flags=re.DOTALL)
 if 'synExport1200Z' not in html:
 
-    _btn_bg  = "#ffd8a8" if EXPORT_TIME == "1800Z" else "#c8dff4"
-    _btn_bdr = "#a85c00" if EXPORT_TIME == "1800Z" else "#1a4a8a"
-    _btn_clr = "#5c2e00" if EXPORT_TIME == "1800Z" else "#1a3a6a"
+    _btn_bg  = "#ffd8a8" if EXPORT_TIME in ("1800Z","0000Z") else "#c8dff4"
+    _btn_bdr = "#a85c00" if EXPORT_TIME in ("1800Z","0000Z") else "#1a4a8a"
+    _btn_clr = "#5c2e00" if EXPORT_TIME in ("1800Z","0000Z") else "#1a3a6a"
     export_js = '''<script>
 function synExport1200Z() {
   var sel = document.getElementById("ts-select");
@@ -2841,11 +2844,28 @@ function synExport1200Z() {
 function synExportCurrent() {
   setTimeout(synSavePNG, 200);
 }
+function synExportMetar() {
+  var hadSlp = _synShowSlp, hadHL = _synShowHL;
+  if (hadSlp) { _synShowSlp = false; _synSlpLayer.remove(); }
+  if (hadHL)  { _synShowHL  = false; _synHLLayer.remove();  }
+  window._synMetarPNG = true;
+  setTimeout(function() {
+    synSavePNG();
+    setTimeout(function() {
+      if (hadSlp) { _synShowSlp = true; _synSlpLayer.addTo(MAP); }
+      if (hadHL)  { _synShowHL  = true; _synHLLayer.addTo(MAP);  }
+      window._synMetarPNG = false;
+    }, 3000);
+  }, 200);
+}
 </script>
 <div style="position:fixed;top:10px;right:10px;z-index:10002;display:flex;flex-direction:column;gap:6px;">
   <button onclick="synExport1200Z()" style="font-family:Courier New,monospace;font-size:12px;
     padding:5px 12px;background:{BTN_BG};border:1px solid {BTN_BDR};border-radius:5px;
-    color:{BTN_CLR};cursor:pointer;font-weight:bold;">Export {EXPORT_TIME} PNG</button>
+    color:{BTN_CLR};cursor:pointer;font-weight:bold;">&#9928; Export {EXPORT_TIME} Analysis PNG</button>
+  <button onclick="synExportMetar()" style="font-family:Courier New,monospace;font-size:12px;
+    padding:5px 12px;background:#f4e8c8;border:1px solid #9a6a00;border-radius:5px;
+    color:#4a3000;cursor:pointer;font-weight:bold;">&#128225; Export {EXPORT_TIME} METAR PNG</button>
   <button onclick="synExportCurrent()" style="font-family:Courier New,monospace;font-size:12px;
     padding:5px 12px;background:#d4f4c8;border:1px solid #1a6a2a;border-radius:5px;
     color:#1a3a1a;cursor:pointer;font-weight:bold;">Export Current PNG</button>
@@ -2899,7 +2919,10 @@ display(HTML(
     f'display:flex;gap:10px;align-items:center;">'
     f'<button onclick="synExport1200Z()" style="font-size:13px;padding:7px 16px;'
     f'background:{_btn_bg};border:1px solid {_btn_bdr};border-radius:5px;'
-    f'color:{_btn_clr};cursor:pointer;font-weight:bold;">&#128247; Export {EXPORT_TIME} PNG</button>'
+    f'color:{_btn_clr};cursor:pointer;font-weight:bold;">&#9928; Export {EXPORT_TIME} Analysis PNG</button>'
+    f'<button onclick="synExportMetar()" style="font-size:13px;padding:7px 16px;'
+    f'background:#f4e8c8;border:1px solid #9a6a00;border-radius:5px;'
+    f'color:#4a3000;cursor:pointer;font-weight:bold;">&#128225; Export {EXPORT_TIME} METAR PNG</button>'
     f'<button onclick="synExportCurrent()" style="font-size:13px;padding:7px 16px;'
     f'background:#d4f4c8;border:1px solid #1a6a2a;border-radius:5px;'
     f'color:#1a3a1a;cursor:pointer;font-weight:bold;">&#128247; Export Current PNG</button>'
@@ -3936,7 +3959,10 @@ with open(out_path) as _f:
 # ── Cell 11 ────────────────────────────────────────────────────────────────
 from datetime import datetime, timezone
 _utc_hour = datetime.now(timezone.utc).hour
-EXPORT_TIME = "1800Z" if (_utc_hour >= 19 or _utc_hour < 13) else "1200Z"
+if   _utc_hour <  6: EXPORT_TIME = "0000Z"
+elif _utc_hour < 12: EXPORT_TIME = "0600Z"
+elif _utc_hour < 18: EXPORT_TIME = "1200Z"
+else:                EXPORT_TIME = "1800Z"
 print(f'UTC hour: {_utc_hour}  →  default export: {EXPORT_TIME}')
 with open('output/synoptic_map.html', 'r', encoding='utf-8') as f:
 
@@ -4162,9 +4188,9 @@ import re
 html = re.sub(r'<script>\s*function synExport1200Z[\s\S]*?</script>\s*<div[^>]*>.*?</div>', '', html, flags=re.DOTALL)
 if 'synExport1200Z' not in html:
 
-    _btn_bg  = "#ffd8a8" if EXPORT_TIME == "1800Z" else "#c8dff4"
-    _btn_bdr = "#a85c00" if EXPORT_TIME == "1800Z" else "#1a4a8a"
-    _btn_clr = "#5c2e00" if EXPORT_TIME == "1800Z" else "#1a3a6a"
+    _btn_bg  = "#ffd8a8" if EXPORT_TIME in ("1800Z","0000Z") else "#c8dff4"
+    _btn_bdr = "#a85c00" if EXPORT_TIME in ("1800Z","0000Z") else "#1a4a8a"
+    _btn_clr = "#5c2e00" if EXPORT_TIME in ("1800Z","0000Z") else "#1a3a6a"
     export_js = '''<script>
 function synExport1200Z() {
   var sel = document.getElementById("ts-select");
@@ -4182,11 +4208,28 @@ function synExport1200Z() {
 function synExportCurrent() {
   setTimeout(synSavePNG, 200);
 }
+function synExportMetar() {
+  var hadSlp = _synShowSlp, hadHL = _synShowHL;
+  if (hadSlp) { _synShowSlp = false; _synSlpLayer.remove(); }
+  if (hadHL)  { _synShowHL  = false; _synHLLayer.remove();  }
+  window._synMetarPNG = true;
+  setTimeout(function() {
+    synSavePNG();
+    setTimeout(function() {
+      if (hadSlp) { _synShowSlp = true; _synSlpLayer.addTo(MAP); }
+      if (hadHL)  { _synShowHL  = true; _synHLLayer.addTo(MAP);  }
+      window._synMetarPNG = false;
+    }, 3000);
+  }, 200);
+}
 </script>
 <div style="position:fixed;top:10px;right:10px;z-index:10002;display:flex;flex-direction:column;gap:6px;">
   <button onclick="synExport1200Z()" style="font-family:Courier New,monospace;font-size:12px;
     padding:5px 12px;background:{BTN_BG};border:1px solid {BTN_BDR};border-radius:5px;
-    color:{BTN_CLR};cursor:pointer;font-weight:bold;">Export {EXPORT_TIME} PNG</button>
+    color:{BTN_CLR};cursor:pointer;font-weight:bold;">&#9928; Export {EXPORT_TIME} Analysis PNG</button>
+  <button onclick="synExportMetar()" style="font-family:Courier New,monospace;font-size:12px;
+    padding:5px 12px;background:#f4e8c8;border:1px solid #9a6a00;border-radius:5px;
+    color:#4a3000;cursor:pointer;font-weight:bold;">&#128225; Export {EXPORT_TIME} METAR PNG</button>
   <button onclick="synExportCurrent()" style="font-family:Courier New,monospace;font-size:12px;
     padding:5px 12px;background:#d4f4c8;border:1px solid #1a6a2a;border-radius:5px;
     color:#1a3a1a;cursor:pointer;font-weight:bold;">Export Current PNG</button>
@@ -4205,7 +4248,10 @@ else:
 # ── Cell 11.1 ────────────────────────────────────────────────────────────────
 from datetime import datetime, timezone
 _utc_hour = datetime.now(timezone.utc).hour
-EXPORT_TIME = "1800Z" if (_utc_hour >= 19 or _utc_hour < 13) else "1200Z"
+if   _utc_hour <  6: EXPORT_TIME = "0000Z"
+elif _utc_hour < 12: EXPORT_TIME = "0600Z"
+elif _utc_hour < 18: EXPORT_TIME = "1200Z"
+else:                EXPORT_TIME = "1800Z"
 print(f'UTC hour: {_utc_hour}  →  default export: {EXPORT_TIME}')
 with open('output/synoptic_map.html', 'r', encoding='utf-8') as f:
     html = f.read()
@@ -4444,9 +4490,9 @@ html = html.replace('var _synShowHL  = false;', 'var _synShowHL  = true;')
 # Always re-inject to pick up new EXPORT_TIME
 html = re.sub(r'<script>\s*function synExport1200Z[\s\S]*?</script>\s*<div[^>]*>.*?</div>', '', html, flags=re.DOTALL)
 if 'synExport1200Z' not in html:
-    _btn_bg  = "#ffd8a8" if EXPORT_TIME == "1800Z" else "#c8dff4"
-    _btn_bdr = "#a85c00" if EXPORT_TIME == "1800Z" else "#1a4a8a"
-    _btn_clr = "#5c2e00" if EXPORT_TIME == "1800Z" else "#1a3a6a"
+    _btn_bg  = "#ffd8a8" if EXPORT_TIME in ("1800Z","0000Z") else "#c8dff4"
+    _btn_bdr = "#a85c00" if EXPORT_TIME in ("1800Z","0000Z") else "#1a4a8a"
+    _btn_clr = "#5c2e00" if EXPORT_TIME in ("1800Z","0000Z") else "#1a3a6a"
     export_js = '''<script>
 function synExport1200Z() {
   var sel = document.getElementById("ts-select");
@@ -4466,11 +4512,28 @@ function synExport1200Z() {
 function synExportCurrent() {
   setTimeout(synSavePNG, 200);
 }
+function synExportMetar() {
+  var hadSlp = _synShowSlp, hadHL = _synShowHL;
+  if (hadSlp) { _synShowSlp = false; _synSlpLayer.remove(); }
+  if (hadHL)  { _synShowHL  = false; _synHLLayer.remove();  }
+  window._synMetarPNG = true;
+  setTimeout(function() {
+    synSavePNG();
+    setTimeout(function() {
+      if (hadSlp) { _synShowSlp = true; _synSlpLayer.addTo(MAP); }
+      if (hadHL)  { _synShowHL  = true; _synHLLayer.addTo(MAP);  }
+      window._synMetarPNG = false;
+    }, 3000);
+  }, 200);
+}
 </script>
 <div style="position:fixed;top:10px;right:10px;z-index:10002;display:flex;flex-direction:column;gap:6px;">
   <button onclick="synExport1200Z()" style="font-family:Courier New,monospace;font-size:12px;
     padding:5px 12px;background:{BTN_BG};border:1px solid {BTN_BDR};border-radius:5px;
-    color:{BTN_CLR};cursor:pointer;font-weight:bold;">Export {EXPORT_TIME} PNG</button>
+    color:{BTN_CLR};cursor:pointer;font-weight:bold;">&#9928; Export {EXPORT_TIME} Analysis PNG</button>
+  <button onclick="synExportMetar()" style="font-family:Courier New,monospace;font-size:12px;
+    padding:5px 12px;background:#f4e8c8;border:1px solid #9a6a00;border-radius:5px;
+    color:#4a3000;cursor:pointer;font-weight:bold;">&#128225; Export {EXPORT_TIME} METAR PNG</button>
   <button onclick="synExportCurrent()" style="font-family:Courier New,monospace;font-size:12px;
     padding:5px 12px;background:#d4f4c8;border:1px solid #1a6a2a;border-radius:5px;
     color:#1a3a1a;cursor:pointer;font-weight:bold;">Export Current PNG</button>
@@ -4524,7 +4587,14 @@ with open('output/synoptic_map.html', encoding='utf-8') as f:
 # Build a data-URI download link so the user can save the HTML file directly.
 _html_b64 = __import__('base64').b64encode(_html.encode('utf-8')).decode()
 _dl_href  = f'data:text/html;base64,{_html_b64}'
-_dl_name  = f'synoptic_map_{EXPORT_TIME}.html'
+# Filename = data time + 6 h (the next synoptic time = the chart label)
+# e.g. data=00Z → label 06Z, data=12Z → label 18Z, data=18Z → label 00Z next day
+from datetime import datetime, timedelta, timezone as _tz
+_data_hour  = int(EXPORT_TIME.replace('Z', ''))   # e.g. 1200 → 1200, 1800 → 1800
+_data_dt    = datetime.now(_tz.utc).replace(hour=_data_hour // 100,
+                                             minute=0, second=0, microsecond=0)
+_label_dt   = _data_dt + timedelta(hours=6)
+_dl_name    = _label_dt.strftime('synoptic_map_%Y%m%d_%Hz') + '.html'
 
 display(HTML(
     f'<div style="font-family:Courier New,monospace;padding:8px 10px;'
