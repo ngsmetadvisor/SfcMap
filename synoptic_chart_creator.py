@@ -620,9 +620,21 @@ print('Alberta Fire Zone XML imported')
 import csv, io, math as _math
 
 def load_stations(url, coverage='standard'):
-    r = requests.get(url, timeout=15)
-    r.raise_for_status()
-    reader = csv.DictReader(io.StringIO(r.text))
+    # Use a local copy if available — avoids network dependency on the runner
+    _local = 'AP_location.csv'
+    if _os.path.exists(_local):
+        print(f'Using local station list: {_local}')
+        with open(_local, encoding='utf-8') as _f:
+            _text = _f.read()
+    else:
+        print(f'Fetching station list from {url}')
+        r = requests.get(url, timeout=15)
+        r.raise_for_status()
+        _text = r.text
+        # Cache it locally for next time
+        with open(_local, 'w', encoding='utf-8') as _f:
+            _f.write(_text)
+    reader = csv.DictReader(io.StringIO(_text))
     stations = {}
     for row in reader:
         icao = row.get('Code','').strip()
