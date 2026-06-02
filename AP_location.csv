@@ -1,0 +1,391 @@
+Code,Name,Latitude,Longitude,Province,ESSENTIAL,STANDARD,ALL,CHART
+CYVR,Vancouver International,49.1947,-123.184,BC,Essential,Standard,All,CHART
+CYAL,Alert Bay,50.5894,-126.903,BC,,,,
+CYAZ,Tofino-Long Beach,49.0719,-125.776,BC,,,,
+CYBD,Bella Coola,52.3992,-126.606,BC,,Standard,All,CHART
+CYBL,Campbell River,49.9511,-125.271,BC,,,All,
+CYCD,Nanaimo,49.0522,-123.869,BC,,Standard,All,
+CYCG,Castlegar/West Kootenay Regional,49.2961,-117.628,BC,,Standard,All,
+CYCP,Blue River,52.1283,-119.309,BC,,Standard,All,
+CYCQ,Chetwynd,55.7008,-121.611,BC,,Standard,All,
+CYCW,Chilliwack,49.1539,-121.928,BC,,,,
+CYCZ,Fairmont Hot Springs,50.3297,-116.036,BC,,,,
+CYDC,Princeton,49.467,-120.536,BC,,,All,
+CYDL,Dease Lake,58.4239,-130.016,BC,,Standard,All,CHART
+CYDQ,Dawson Creek,55.7447,-120.183,BC,,Standard,All,
+CYGB,Texada/Gillies Bay,49.6972,-124.52,BC,,,,
+CYKA,Kamloops,50.7011,-120.441,BC,,Standard,All,
+CYLW,Kelowna,49.9572,-119.377,BC,,Standard,All,CHART
+CYPK,Pitt Meadows,49.2117,-122.71,BC,,,,
+CYPR,Prince Rupert,54.2908,-130.446,BC,,,All,CHART
+CYPW,Powell River,49.8322,-124.502,BC,,,All,
+CYQZ,Quesnel,52.9753,-122.51,BC,,,All,
+CYQQ,Comox,49.7119,-124.896,BC,,Standard,All,
+CYYE,Fort Nelson,58.836,-122.597,BC,,Standard,All,CHART
+CYWL,Williams Lake,52.1833,-122.053,BC,,Standard,All,CHART
+CYXC,Cranbrook/Canadian Rockies International,49.6083,-115.789,BC,,Standard,All,CHART
+CYXJ,Fort St. John/North Peace,56.2428,-120.741,BC,,Standard,All,CHART
+CYXS,Prince George,53.8825,-122.678,BC,,Standard,All,CHART
+CYYD,Smithers,54.8189,-127.181,BC,,Standard,All,CHART
+CYYF,Penticton,49.4628,-119.601,BC,,,All,
+CYYJ,Victoria International,48.6472,-123.426,BC,Essential,Standard,All,
+CYZP,Sandspit,53.2508,-131.815,BC,,Standard,All,CHART
+CYZY,Mackenzie,55.303,-123.135,BC,,Standard,All,CHART
+CYZZ,Trail,49.0569,-117.585,BC,,,,
+CZAM,Salmon Arm,50.6828,-119.229,BC,,,,
+CZBB,Vancouver/Boundary Bay,49.0717,-123.003,BC,,,,
+CYBA,Banff,51.1961,-115.541,AB,,,,
+CYBF,Bonnyville,54.2989,-110.741,AB,,,,
+CWBO,Brooks,50.5531,-111.8572,AB,,Standard,All,
+CYBW,Calgary/Springbank,51.1028,-114.374,AB,,Standard,All,
+CWCT,Coronation,52.0722,-111.45,AB,,Standard,All,
+CWGY,Loverna,51.67,-110.206,AB,,Standard,All,CHART
+CYEA,Empress,50.9831,-110.0044,AB,,,,
+CYEG,Edmonton International,53.3097,-113.579,AB,Essential,Standard,All,CHART
+CYET,Edson,53.585,-116.467,AB,,Standard,All,
+CYFI,Fort MacKay/Firebag,57.2917,-111.667,AB,,,,
+CYJF,Fort Liard Airport,60.236,-123.47,NT,,Standard,All,CHART
+CYLL,Lloydminster,53.3094,-110.072,AB,,Standard,All,
+CYMM,Fort McMurray,56.6537,-111.222,AB,,Standard,All,CHART
+CYQF,Red Deer,52.1831,-113.893,AB,,Standard,All,
+CYQL,Lethbridge,49.63,-112.8,AB,,Standard,All,CHART
+CYQU,Grande Prairie,55.17,-118.885,AB,,Standard,All,CHART
+CYYC,Calgary International,51.1139,-114.019,AB,Essential,Standard,All,CHART
+CYXH,Medicine Hat,50.0181,-110.72,AB,,Standard,All,CHART
+CZVL,Edmonton/Villeneuve,53.6675,-113.8544,AB,,Standard,All,
+CYZH,Slave Lake Airport,55.2931,-114.777,AB,,Standard,All,CHART
+CYZU,Whitecourt Airport,54.144,-115.787,AB,,Standard,All,CHART
+CWJW,Jasper,52.9256,-118.06,AB,,Standard,All,CHART
+CWRM,Rocky Mountain House,52.431,-114.907,AB,,Standard,All,CHART
+CWAV,Sundre,51.777,-114.681,AB,,Standard,All,
+CWXA,Canmore,51.0772,-115.3567,AB,,Standard,All,
+CWDZ,Drumheller,51.4642,-112.7272,AB,,Standard,All,
+CWZG,Banff,51.194,-115.552,AB,,Standard,All,
+CWOE,Onefour,49.123,-110.469,AB,,Standard,All,
+CWRY,Milk River,49.133,-112.051,AB,,Standard,All,
+CWXL,Shamrock,49.734,-111.45,AB,,Standard,All,
+CWLB,Lac La Biche,54.769,-112.024,AB,,Standard,All,
+CWVI,Vegreville,53.505,-112.098,AB,,Standard,All,
+CZPC,Pincher Creek Airport,49.522,-114.005,AB,,Standard,All,CHART
+CWGM,Waterton,49.05,-113.9167,AB,,Standard,All,CHART
+CWRT,Crowsnest Pass,49.628,-114.482,AB,,Standard,All,
+CWDK,Claresholm,50.0267,-113.61,AB,,Standard,All,
+CYBU,Nipawin,53.3642,-104.011,SK,,Standard,All,
+CYEN,Estevan,49.207,-102.963,SK,,Standard,All,CHART
+CYFO,Flin Flon,54.6783,-101.682,SK,,Standard,All,
+CYHB,Hudson Bay,52.8167,-102.316,SK,,,,
+CYPA,Prince Albert,53.2147,-105.672,SK,,Standard,All,CHART
+CYQR,Regina,50.4319,-104.665,SK,Essential,Standard,All,
+CYQW,North Battleford,52.7697,-108.2439,SK,,Standard,All,
+CYSF,Stony Rapids,59.2506,-105.8417,SK,,Standard,All,CHART
+CYXE,Saskatoon,52.1706,-106.699,SK,,Standard,All,
+CYKY,Kindersley Airport,51.517,-109.175,SK,,Standard,All,
+CYAV,St. Andrews,50.0561,-97.0325,MB,,,,
+CYBR,Brandon,49.91,-99.951,MB,,Standard,All,CHART
+CYBT,Brochet,57.8864,-101.677,MB,,,,
+CYBV,Berens River,52.3589,-97.0183,MB,,Standard,All,
+CYDN,Dauphin,51.1039,-100.055,MB,,Standard,All,
+CYGX,Gillam,56.368,-94.707,MB,,Standard,All,CHART
+CYGO,Gods Lake Narrows,54.5517,-94.5125,MB,,,,
+CYNE,Norway House,53.9483,-97.8428,MB,,Standard,All,CHART
+CYRL,Red Lake,51.0667,-93.7833,MB,,Standard,All,
+CYWG,Winnipeg/James Armstrong Richardson International,49.91,-97.239,MB,Essential,Standard,All,CHART
+CYYQ,Churchill,58.739,-94.065,MB,,Standard,All,CHART
+CYDA,Dawson City,64.0414,-139.129,YT,,Standard,All,CHART
+CYEV,Inuvik/Mike Zubko,68.3044,-133.497,NT,,Standard,All,CHART
+CYFS,Fort Simpson,61.7636,-121.236,NT,,Standard,All,CHART
+CYHY,Hay River,60.839,-115.782,NT,,Standard,All,CHART
+CYKD,Aklavik/Freddie Carmichael,68.2192,-135.006,NT,,,All,
+CYLK,Lutselk'e,62.4181,-110.6819,NT,,,All,CHART
+CYPC,Paulatuk/Nora Aliqatchialuk Ruben,69.3439,-124.068,NT,,Standard,All,CHART
+CYRA,Rae Lakes,64.12,-117.3,NT,,Standard,All,CHART
+CYSY,Sachs Harbour/David Nasogaluak Jr. Saaryuaq,71.9961,-125.242,NT,,,All,CHART
+CYUB,Tuktoyaktuk/James Gruben,69.4319,-132.999,NT,,Standard,All,CHART
+CYVQ,Norman Wells,65.281,-126.798,NT,,Standard,All,CHART
+CYWJ,Deline,65.2181,-123.4356,NT,,,All,
+CYXY,Whitehorse,60.71,-135.07,YT,Essential,Standard,All,CHART
+CYWE,Wekweeti,64.1956,-114.733,NT,,,All,
+CYWY,Wrigley,63.2128,-123.447,NT,,,,
+CYOJ,High Level,58.6214,-117.165,AB,,Standard,All,CHART
+CYPE,Peace River,56.2267,-117.4475,AB,,Standard,All,CHART
+CYPY,Fort Chipewyan,58.7697,-111.127,AB,,Standard,All,CHART
+CYKJ,Key Lake,57.2561,-105.618,SK,,Standard,All,CHART
+CYXX,Abbotsford International Airport,49.0225,-122.3807,BC,,Standard,All,
+CYKO,Akulivik Airport,60.8178,-78.1489,QC,,Standard,All,
+CYYW,Armstrong Airport,50.29,-88.9094,ON,,,All,CHART
+CYYY,Mont-Joli Airport,48.609,-68.208,QC,,Standard,All,CHART
+CYHM,John C. Munro Hamilton International Airport,43.1736,-79.934,ON,,Standard,All,CHART
+CYXU,London International Airport,43.0353,-81.1517,ON,,Standard,All,CHART
+CYTZ,Billy Bishop Toronto City Airport,43.6275,-79.3961,ON,,,All,
+CYQT,Thunder Bay International Airport,48.3716,-89.3237,ON,,Standard,All,CHART
+CYVC,La Ronge / Barber Field,55.1514,-105.262,SK,,Standard,All,CHART
+CYOD,Cold Lake / CFB Cold Lake,54.405,-110.279,AB,,Standard,All,CHART
+CYPG,Portage-la-Prairie / Southport Airport,49.9031,-98.2738,MB,,Standard,All,
+CYOW,Ottawa Macdonald-Cartier International Airport,45.3225,-75.6692,ON,Essential,Standard,All,CHART
+CYUL,Montreal-Trudeau International Airport,45.470556,-73.740833,QC,Essential,Standard,All,CHART
+CYHU,Montreal/Saint-Hubert Airport,45.5175,-73.4169,QC,Essential,Standard,All,CHART
+CYHZ,Halifax Stanfield International Airport,44.8808,-63.5086,NS,Essential,Standard,All,CHART
+CYQX,Gander International Airport,48.9369,-54.5681,NL,,Standard,All,CHART
+CYQM,Greater Moncton Romeo LeBlanc International Airport,46.1122,-64.6786,NB,Essential,Standard,All,CHART
+CYFC,Fredericton International Airport,45.8686,-66.5372,NB,Essential,Standard,All,CHART
+CYSJ,Saint John Airport,45.3167,-65.8906,NB,Essential,Standard,All,CHART
+CYZF,Yellowknife,62.4628,-114.4401,NT,Essential,Standard,All,CHART
+CYSM,Fort Smith,60.026,-111.929,NT,,Standard,All,CHART
+CYFR,Fort Resolution,61.178,-113.688,NT,,Standard,All,
+CXDE,DelineWx,65.209,-123.434,NT,,Standard,All,CHART
+CXLL,CXLL,61.125,-122.851,NT,,,All,
+CYQH,Watson Lake,60.116,-128.832,YT,,Standard,All,CHART
+CYVT,Buffalo Narrows,55.842,-108.418,SK,,Standard,All,CHART
+CYLJ,Meadow Lake,54.126,-108.519,SK,,Standard,All,
+CWDC,Uranium City,59.56,-108.487,SK,,Standard,All,
+CYYN,Swift Current,50.292,-107.691,SK,,Standard,All,CHART
+CWVP,CWVP,49.64,-109.514,SK,,Standard,All,
+CYMJ,Moose Jaw,50.33,-105.559,SK,,,All,CHART
+CYQV,Yorkton,51.26,-102.461,SK,,Standard,All,CHART
+CYQD,The Pas,53.975,-101.089,MB,,Standard,All,CHART
+CYYL,Lynn Lake,56.863,-101.073,MB,,Standard,All,CHART
+CYBQ,Tadoule Lake,58.707,-98.511,MB,,Standard,All,CHART
+CYTH,Thompson,55.803,-97.846,MB,,Standard,All,CHART
+CYIV,Island Lake,53.857,-94.655,MB,,Standard,All,CHART
+CYLT,Alert,82.512,-62.317,NU,,,,CHART
+PANC,Anchorage,61.169,-150.028,AK,,Standard,All,CHART
+CYQB,Quebec International,46.791,-71.396,QC,Essential,Standard,All,CHART
+CYYT,St John International,47.627,-52.748,NL,Essential,Standard,All,CHART
+CYYG,Charlottetown,46.289,-63.128,PEI,Essential,Standard,All,CHART
+CYYZ,Toronto Pearson International Airport,43.679,-79.629,ON,Essential,Standard,All,CHART
+CYFB,Iqaluit Airport,63.75,-68.544,NU,Essential,Standard,All,CHART
+CYAH,La Grande,53.757,-73.676,QC,,Standard,All,CHART
+CYBK,Baker Lake,64.306,-96.078,NU,,Standard,All,CHART
+CYBB,Kugaaruk,68.536,-89.792,NU,,Standard,All,CHART
+CYYR,Goose Bay,53.32,-60.417,NL,,Standard,All,CHART
+CYPX,Puvirnituq,60.045,-77.281,NU,,Standard,All,CHART
+CYCY,Clyde River,70.484,-68.515,NU,,Standard,All,CHART
+CWGZ,Grise Fiord,76.423,-82.902,NU,,Standard,All,CHART
+CYXT,Terrace,54.471,-128.577,BC,,Standard,All,
+KMGM,Montgomery,32.3,-86.394,AL,,,All,CHART
+KBHM,Birmingham,33.563,-86.754,AL,,,All,CHART
+PAJN,Juneau,58.355,-134.576,AK,,,All,CHART
+PAJC,Chignik,56.312,-158.374,AK,,,All,CHART
+KPHX,Phoenix,33.435,-112.007,AZ,,,All,CHART
+KLIT,Little Rock,34.729,-92.225,AR,,,All,CHART
+KSMF,Sacramento,38.695,-121.59,CA,,,All,CHART
+KLAX,Los Angeles,33.942,-118.409,CA,,,All,CHART
+KDEN,Denver,39.856,-104.673,CO,,,All,CHART
+KBDL,Hartford,41.939,-72.683,CT,,,All,CHART
+KDOV,Dover,39.129,-75.466,DE,,,All,CHART
+KPHL,Philadelphia,39.872,-75.241,PA,,,All,CHART
+KTLH,Tallahassee,30.396,-84.35,FL,,,All,CHART
+KMIA,Miami,25.795,-80.287,FL,,,All,CHART
+KATL,Atlanta,33.64,-84.427,GA,,,All,CHART
+PHNL,Honolulu,21.318,-157.922,HI,,,All,CHART
+KBOI,Boise,43.564,-116.223,ID,,,All,CHART
+KSPI,Springfield,39.844,-89.678,IL,,,All,
+KORD,Chicago,41.974,-87.907,IL,,,All,CHART
+KIND,Indianapolis,39.717,-86.295,IN,,,All,CHART
+KDSM,Des Moines,41.534,-93.663,IA,,,All,CHART
+KTOP,Topeka,39.069,-95.623,KS,,,All,CHART
+KICT,Wichita,37.65,-97.433,KS,,,All,CHART
+KFFT,Frankfort,38.182,-84.904,KY,,,All,CHART
+KSDF,Louisville,38.174,-85.736,KY,,,All,CHART
+KBTR,Baton Rouge Metropolitan,30.538,-91.147,LA,,,All,CHART
+KMSY,New Orleans,29.993,-90.258,LA,,,All,CHART
+KAUG,Augusta,44.32,-69.797,ME,,,All,CHART
+KPWM,Portland,43.646,-70.309,ME,,,All,CHART
+KMTN,Baltimore,39.325,-76.413,MD,,,All,CHART
+KBWI,Baltimore/Washington,39.175,-76.668,MD,,,All,CHART
+KBOS,Boston,42.365,-71.009,MA,,,All,CHART
+KLAN,Lansing,42.779,-84.587,MI,,,All,CHART
+KDTW,Detroit,42.216,-83.355,MI,,,All,CHART
+KMSP,Minneapolis,44.882,-93.222,MN,,Standard,All,CHART
+KJAN,Jackson,32.311,-90.076,MS,,,All,CHART
+KJEF,Jefferson City,38.591,-92.157,MO,,,All,CHART
+KSTL,St Louis,38.748,-90.37,MO,,,All,CHART
+KHLN,Helena,46.606,-111.983,MT,,Standard,All,
+KBZN,Bozeman,45.777,-111.153,MT,,,All,
+KLNK,Lincoln,40.851,-96.759,NE,,,All,CHART
+KOMA,Omaha,41.303,-95.894,NE,,,All,
+KCXP,Carson City,39.192,-119.734,NV,,,All,CHART
+KLAS,Las Vegas,36.085,-115.153,NV,,,All,CHART
+KCON,Concord,43.203,-71.502,NH,,,All,CHART
+KMHT,Manchester,42.933,-71.438,NH,,,All,CHART
+KTTN,Trenton,40.276,-74.814,NJ,,,All,CHART
+KEWR,Newark,40.689,-74.174,NJ,,,All,CHART
+KSAF,Santa Fe,35.617,-106.089,NM,,,All,CHART
+KABQ,Albuquerque,35.04,-106.609,NM,,,All,CHART
+KALB,Albany,42.748,-73.803,NY,,,All,CHART
+KJFK,New York,40.641,-73.778,NY,,,All,CHART
+KRDU,Raleigh,35.877,-78.787,NC,,,All,CHART
+KCLT,Charlotte,35.214,-80.943,NC,,,All,CHART
+KBIS,Bismarck,46.772,-100.746,ND,,Standard,All,CHART
+KFAR,Fargo,46.92,-96.815,ND,,Standard,All,CHART
+KCMH,Columbus,39.998,-82.892,OH,,,All,CHART
+KCLE,Cleveland,41.412,-81.849,OH,,,All,CHART
+KOKC,Oklahoma City,35.393,-97.601,OK,,,All,CHART
+KSLE,Salem,44.909,-123.003,OR,,Standard,All,
+KPDX,Portland,45.589,-122.597,OR,,,All,CHART
+KMDT,Harrisburg,40.193,-76.763,PA,,,All,CHART
+KPVD,Providence,41.724,-71.428,RI,,,All,CHART
+KCAE,Columbia,33.939,-81.119,SC,,,All,CHART
+KCHS,Charleston,32.899,-80.041,SC,,,All,CHART
+KPIR,Pierre,44.382,-100.286,SD,,,All,CHART
+KFSD,Sioux Falls,43.582,-96.741,SD,,,All,
+KBNA,Nashville,36.124,-86.678,TN,,,All,CHART
+KAUS,Austin,30.197,-97.666,TX,,,All,CHART
+KDFW,Dallas-Fort Worth,32.899,-97.04,TX,,,All,CHART
+KSLC,Salt Lake City,40.789,-111.979,UT,,,All,CHART
+KMPV,Montpelier,44.203,-72.562,VT,,,All,CHART
+KBTV,Burlington,44.471,-73.153,VT,,,All,CHART
+KRIC,Richmond,37.506,-77.32,VA,,,All,CHART
+KIAD,Washington Dulles,38.953,-77.456,VA,,,All,CHART
+KOLM,Olympia,46.97,-122.903,WA,,,All,
+KSEA,Seattle,47.45,-122.309,WA,,Standard,All,CHART
+KCRW,Charleston,38.373,-81.593,WV,,,All,CHART
+KMSN,Madison,43.14,-89.337,WI,,,All,CHART
+KMKE,Milwaukee,42.947,-87.897,WI,,,All,CHART
+KCYS,Cheyenne,41.156,-104.812,WY,,,All,
+KJAC,Jackson,43.607,-110.738,WY,,,All,
+KOAK,Oakland,37.721,-122.221,CA,,,All,
+KSJC,San Jose,37.363,-121.929,CA,,,All,CHART
+PHLI,Lihue,21.976,-159.339,HI,,,All,CHART
+PHTO,Hilo,19.72,-155.048,HI,,,All,CHART
+PGUM,Guam,13.4836,-221.7961,GU,,,All,CHART
+PMDY,Midway Atoll,28.202,-177.381,UM,,,All,CHART
+KSFO,San Francisco International Airport,37.619,-122.375,US,,,All,CHART
+CYTE,Cape Dorset,64.23,-76.526,NU,,,All,CHART
+CYZS,Coral Harbour,64.193,-83.359,NU,,,All,CHART
+CYCS,Chesterfield Inlet,63.347,-90.731,NU,,,All,CHART
+CYUT,Repulse Bay,66.522,-86.225,NU,,,All,CHART
+CYUX,Hall Beach,68.776,-81.243,NU,,,All,CHART
+CYIO,Pond Inlet,72.683,-77.967,NU,,,All,CHART
+CYIN,Clinton Ranch,51.265,-121.681,BC,,,All,CHART
+CYVM,Qikiqtarjuaq,67.545,-64.032,NU,,,All,CHART
+CYKG,Kangiqsujuaq,61.589,-71.926,NU,,,All,CHART
+CYKQ,Waskaganish,51.473,-78.758,QC,,,All,CHART
+CYGW,Kuujjuarapik,55.281,-77.765,QC,,,All,CHART
+CYAS,Kangirsuk,60.027,-69.999,QC,,,All,CHART
+CYLU,Kanuapscow,54.833,-69.583,QC,,,All,CHART
+CYWP,Webequie,52.954,-87.374,ON,,,All,
+CYKP,Kasabonika,53.524,-88.643,ON,,,All,CHART
+CZMD,Muskrat Dam,53.441,-91.763,ON,,,All,CHART
+CYMO,Moosonee,51.291,-80.608,ON,,,All,CHART
+CYLA,Lansdowne House,52.196,-87.934,ON,,,All,CHART
+CZWL,Wollaston Lake,58.107,-103.172,SK,,,All,
+CYGT,Igloolik,69.364,-81.816,NU,,,All,
+CYCO,Kugluktuk,67.833,-115.143,NU,,,All,CHART
+CYHI,Ulukhaktok,70.762,-117.806,NT,,,All,CHART
+KGTF,Great Falls,47.48,-111.371,MT,Essential,Standard,All,CHART
+KGGW,Glasgow,48.213,-106.614,MT,,,All,
+KHVR,Havre,48.543,-109.762,MT,,,All,
+KSDY,Sidney,47.707,-104.193,MT,,,All,
+KMLS,Miles City,46.428,-105.886,MT,,,All,CHART
+KINL,International Falls,48.566,-93.403,MN,,,All,CHART
+KBRD,Brainerd,46.398,-94.137,MN,,,All,CHART
+KGFK,Grand Forks,47.949,-97.176,ND,,,All,
+KDIK,Dickinson,46.798,-102.802,ND,,,All,
+KABR,Aberdeen,45.449,-98.422,SD,,,All,
+KHON,Huron,44.385,-98.228,SD,,,All,
+KRAP,Rapid City,44.045,-103.057,SD,,,All,CHART
+KEAU,Eau Claire,44.865,-91.484,WI,,,All,CHART
+KGRB,Green Bay,44.485,-88.13,WI,,,All,CHART
+KDLH,Duluth,46.842,-92.194,MN,,,All,CHART
+KIMT,Iron Mountain,45.818,-88.114,MI,,,All,CHART
+KSAW,Marquette,46.354,-87.395,MI,,,All,CHART
+KCMX,Houghton,47.168,-88.489,MI,,,All,CHART
+KBLI,Bellingham,48.793,-122.537,WA,,,All,
+KPAE,Everett/Paine Field,47.906,-122.282,WA,,,All,
+KTIW,Tacoma Narrows,47.268,-122.578,WA,,,All,
+KHQM,Hoquiam,46.971,-123.936,WA,,,All,
+KYKM,Yakima,46.568,-120.544,WA,,,All,
+KELN,Ellensburg,47.033,-120.531,WA,,,All,
+KEAT,Wenatchee,47.399,-120.206,WA,,,All,
+KOMK,Omak,48.464,-119.517,WA,,,All,
+KGEG,Spokane,47.619,-117.534,WA,,,All,CHART
+KPUW,Pullman,46.744,-117.11,WA,,,All,
+KCLS,Chehalis,46.677,-122.983,WA,,,All,
+KBVS,Burlington/Anacortes,48.47,-122.421,WA,,,All,
+KFHR,Friday Harbor,48.522,-123.024,WA,,,All,
+KMSO,Missoula,46.916,-114.091,MT,,,All,
+KFCA,Kalispell,48.31,-114.256,MT,,,All,
+KBIL,Billings,45.807,-108.543,MT,,,All,CHART
+KLWT,Lewistown,47.049,-109.467,MT,,,All,
+KCUT,Cutbank,48.608,-112.376,MT,,,All,
+KOLF,Wolf Point,48.094,-105.574,MT,,,All,
+KDLN,Dillon,45.255,-112.553,MT,,,All,CHART
+KCOD,Cody,44.52,-109.024,WY,,,All,
+KBFF,Scottsbluff,41.874,-103.596,WY,,,All,CHART
+KRKS,Rock Springs,41.594,-109.065,WY,,,All,
+KCPR,Casper,42.908,-106.464,WY,,,All,
+KLND,Lander,42.815,-108.73,WY,,,All,CHART
+KGCC,Gillette,44.349,-105.539,WY,,,All,CHART
+KSHR,Sheridan,44.769,-106.98,WY,,,All,
+KMBG,Mobridge,45.547,-100.407,SD,,,All,
+KYKN,Yankton,42.917,-97.385,SD,,,All,CHART
+KBKX,Brookings,44.305,-96.817,SD,,,All,CHART
+KLAM,Los Alamos,35.879,-106.269,NM,,,All,CHART
+KBMJ,Bemidji,47.51,-94.934,MN,,,All,
+KHIB,Hibbing,47.387,-92.839,MN,,,All,CHART
+KAXN,Alexandria,45.866,-95.395,MN,,,All,CHART
+KRWF,Redwood Falls,44.547,-95.083,MN,,,All,CHART
+KSTC,St Cloud,45.546,-94.06,MN,,,All,CHART
+KFBL,Faribault,44.325,-93.311,MN,,,All,CHART
+KATW,Appleton,44.258,-88.519,WI,,,All,CHART
+KSUE,Sturgeon Bay,44.844,-87.421,WI,,,All,CHART
+KRHI,Rhinelander,45.631,-89.467,WI,,,All,CHART
+KENW,Kenosha,42.596,-87.928,WI,,,All,CHART
+KCLX,La Crosse,43.879,-91.257,WI,,,All,
+PAOM,Nome,64.512,-165.445,AK,,,All,CHART
+PABE,Bethel,60.779,-161.838,AK,,,All,CHART
+PAKN,King Salmon,58.688,-156.649,AK,,,All,CHART
+PADQ,Kodiak,57.75,-152.494,AK,,,All,CHART
+PAHO,Homer,59.645,-151.477,AK,,,All,CHART
+PAWD,Seward,60.127,-149.444,AK,,,All,CHART
+PAVD,Valdez,61.134,-146.248,AK,,,All,CHART
+PACD,Cold Bay,55.206,-162.725,AK,,,All,CHART
+PADU,Unalaska/Dutch Harbor,53.9,-166.544,AK,,,All,CHART
+PASN,St Paul Island,57.167,-170.22,AK,,,All,CHART
+PAOT,Kotzebue,66.885,-162.636,AK,,,All,CHART
+PABR,Barrow/Utqiagvik,71.285,-156.766,AK,,,All,CHART
+PABT,Bettles,66.914,-151.529,AK,,,All,CHART
+PAFA,Fairbanks,64.815,-147.856,AK,,,All,CHART
+PAEG,Eagle,64.778,-141.15,AK,,,All,CHART
+PAYA,Yakutat,59.503,-139.66,AK,,,All,CHART
+PAKT,Ketchikan,55.356,-131.714,AK,,,All,CHART
+PASI,Sitka,57.047,-135.362,AK,,,All,
+PAWG,Wrangell,56.484,-132.37,AK,,,All,CHART
+PAPG,Petersburg,56.801,-132.945,AK,,,All,
+CWIJ,Lac La Martre,65.756,-111.246,NT,,,All,CHART
+CWJC,Ennadai Lake,61.132,-100.884,NU,,,All,CHART
+CYEK,Arviat,61.098,-94.072,NU,,,All,CHART
+CXWB,CXWB,65.879,-89.446,NU,,,All,CHART
+CYHK,Gjoa Haven,68.633,-95.851,NU,,,All,CHART
+CYCB,Cambridge Bay,69.106,-105.116,NU,,,All,CHART
+CYVL,Colville Lake,67.021,-126.129,NT,,,All,CHART
+CYMA,Mayo,63.616,-135.88,YT,,,All,CHART
+PARC,Arctic Village,68.113,-145.576,AK,,,All,CHART
+PAOR,Northway,62.962,-141.938,AK,,,All,CHART
+PAMD,Middleton Island,59.442,-146.317,AK,,,All,CHART
+PACV,Cordova,60.486,-145.445,AK,,,All,CHART
+PAMC,McGrath,62.957,-155.61,AK,,,All,CHART
+CYZT,Port Hardy,50.685,-127.369,BC,,,All,CHART
+CYER,Fort Severn,56.019,-87.675,ON,,,All,CHART
+CYXL,Sioux Lookout,50.114,-91.905,ON,,,All,CHART
+CYAT,Attawapiskat,52.927,-82.432,ON,,,All,CHART
+CYYU,Kapuskasing,49.416,-82.47,ON,,,All,CHART
+CYXR,Earlton,47.698,-79.852,ON,,,All,CHART
+CYPO,Peawanuck,54.988,-85.439,ON,,,All,CHART
+CYMT,Chapais,49.779,-74.527,QC,,,All,CHART
+CZFN,Tulita,64.908,-125.563,NT,,,All,
+CZFA,Faro,62.211,-133.385,YT,,,All,CHART
+KMFR,Medford,42.375,-122.877,OR,,,All,CHART
+KBNO,Burns,43.595,-118.958,OR,,,All,
+KEKO,Elko,40.824,-115.786,NV,,,All,CHART
+KEUG,Eugene,44.133,-123.216,OR,,,All,CHART
+KPDT,Eastern Oregon Regional Airport,45.697,-118.835,OR,,,All,CHART
+KGPI,Glacier Park,48.304,-114.262,MT,,,All,
+KHRF,Ravalli County Airport,46.258,-114.127,MT,,,All,CHART
+KIDA,Idaho Falls,43.52,-112.067,ID,,,All,CHART
+CYFH,Fort Hope,51.562,-87.908,ON,,,,
+CYTX,Terrace Bay,48.5,-87.0833,ON,,,,
+CYGH,Fort Good Hope,66.242,-128.644,NWT,,,All,CHART
+KXWA,Williston Basin,48.254,-103.747,ND,,,All,CHART
+
