@@ -2894,7 +2894,7 @@ function synExportMetar() {
     color:#3a006a;cursor:pointer;font-weight:bold;">&#9881; Run Script Now</button>
   <div id="gha-panel" style="display:none;flex-direction:row;align-items:center;gap:6px;padding:5px 10px;
     background:#faf8ff;border:1px solid #9a6acc;border-radius:5px;">
-    <span style="color:#555;font-size:11px;font-family:Courier New,monospace;">ghp_5te1jZS2kbyfzeYUANY6CebGtQGp</span>
+    <span style="color:#555;font-size:11px;font-family:Courier New,monospace;">PIN</span>
     <input id="gha-pin" type="password" maxlength="4" placeholder="····"
       onkeydown="if(event.key==='Enter')synTriggerGHA()"
       style="width:52px;font-family:Courier New,monospace;font-size:12px;padding:3px 5px;
@@ -4291,7 +4291,7 @@ function synExportMetar() {
     color:#3a006a;cursor:pointer;font-weight:bold;">&#9881; Run Script Now</button>
   <div id="gha-panel" style="display:none;flex-direction:row;align-items:center;gap:6px;padding:5px 10px;
     background:#faf8ff;border:1px solid #9a6acc;border-radius:5px;">
-    <span style="color:#555;font-size:11px;font-family:Courier New,monospace;">ghp_5te1jZS2kbyfzeYUANY6CebGtQGp</span>
+    <span style="color:#555;font-size:11px;font-family:Courier New,monospace;">PIN</span>
     <input id="gha-pin" type="password" maxlength="4" placeholder="····"
       onkeydown="if(event.key==='Enter')synTriggerGHA()"
       style="width:52px;font-family:Courier New,monospace;font-size:12px;padding:3px 5px;
@@ -4690,7 +4690,7 @@ function synTriggerGHA() {
   var pin=document.getElementById("gha-pin").value.trim();
   var st=document.getElementById("gha-status");
   if(pin.length!==4){st.style.color="#aa2222";st.textContent="Enter 4-char suffix.";return;}
-  _ghaTok="ghp_5te1jZS2kbyfzeYUANY6CebGtQGp"+pin;
+  _ghaTok="ghp_5te1jZS2kbyfzeYUANY6CebGtQGpza2j"+pin;
   st.style.color="#555";st.textContent="Dispatching...";
   var base="https://api.github.com/repos/ngsmetadvisor/SfcMap";
   var hdr={Authorization:"Bearer "+_ghaTok,Accept:"application/vnd.github+json","Content-Type":"application/json"};
@@ -4732,7 +4732,7 @@ function synTriggerGHA() {
     color:#3a006a;cursor:pointer;font-weight:bold;">&#9881; Run Script Now</button>
   <div id="gha-panel" style="display:none;flex-direction:row;align-items:center;gap:6px;padding:5px 10px;
     background:#faf8ff;border:1px solid #9a6acc;border-radius:5px;">
-    <span style="color:#555;font-size:11px;font-family:Courier New,monospace;">ghp_5te1jZS2kbyfzeYUANY6CebGtQGp</span>
+    <span style="color:#555;font-size:11px;font-family:Courier New,monospace;">PIN</span>
     <input id="gha-pin" type="password" maxlength="4" placeholder="····"
       onkeydown="if(event.key==='Enter')synTriggerGHA()"
       style="width:52px;font-family:Courier New,monospace;font-size:12px;padding:3px 5px;
@@ -4833,7 +4833,7 @@ display(HTML(
     f'<div id="gha-panel" style="display:none;align-items:center;gap:8px;padding:6px 12px;'
     f'background:#faf8ff;border:1px solid #9a6acc;border-radius:6px;font-family:Courier New,monospace;font-size:12px;">'
     f'<span style="color:#6a2a9a;font-weight:bold;">&#128273;</span>'
-    f'<span style="color:#555;letter-spacing:0.05em;">ghp_5te1jZS2kbyfzeYUANY6CebGtQGp</span>'
+    f'<span style="color:#555;letter-spacing:0.05em;">PIN</span>'
     f'<input id="gha-pin" type="password" maxlength="4" placeholder="····" '
     f'onkeydown="if(event.key===\'Enter\')synTriggerGHA()" '
     f'style="width:54px;font-family:Courier New,monospace;font-size:13px;padding:4px 6px;'
@@ -4934,7 +4934,7 @@ display(HTML(
     f'  var pin=document.getElementById("gha-pin").value.trim();'
     f'  var st=document.getElementById("gha-status");'
     f'  if(pin.length!==4){{st.style.color="#aa2222";st.textContent="Enter 4-char suffix.";return;}}'
-    f'  _ghaTok="ghp_5te1jZS2kbyfzeYUANY6CebGtQGp"+pin;'
+    f'  _ghaTok="ghp_5te1jZS2kbyfzeYUANY6CebGtQGpza2j"+pin;'
     f'  st.style.color="#555";st.textContent="Dispatching...";'
     f'  var base="https://api.github.com/repos/ngsmetadvisor/SfcMap";'
     f'  var hdr={{Authorization:"Bearer "+_ghaTok,Accept:"application/vnd.github+json","Content-Type":"application/json"}};'
