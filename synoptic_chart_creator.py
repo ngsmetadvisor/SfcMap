@@ -2190,6 +2190,7 @@ for _ts in _ts_all:
         if _d['timestamp'] != _ts: continue
         pass  # no geographic filter — use all stations
         _svg, _sw, _sh = station_model_svg(_d, S=SYMBOL_SCALE)
+        _svg_wmo, _, _ = station_model_svg(_d, S=SYMBOL_SCALE, wmo_style=True)
         _fc = flight_cat_color(_d)
         _wg = f' G{_d["wind_gust"]}' if _d.get('wind_gust') else ''
         _pop = (
@@ -2208,7 +2209,7 @@ for _ts in _ts_all:
         )
         _entries.append({
             'lat': _d['lat'], 'lon': _d['lon'],
-            'svg': _svg, 'sw': _sw, 'sh': _sh, 'popup': _pop,
+            'svg': _svg, 'svg_wmo': _svg_wmo, 'sw': _sw, 'sh': _sh, 'popup': _pop,
             'tip': f'{_d["icao"]} {_d["temp"]}C/{_d["dew"]}C {_d["wind_dir"]}/{_d["wind_spd"]}kt'
         })
     _ts_data[_ts] = _entries
@@ -2270,9 +2271,12 @@ ts_js = (
     '  if (_synHLLayer)  { MAP.removeLayer(_synHLLayer);  _synHLLayer  = null; }\n'
     '  _synStnLayer = L.layerGroup();\n'
     '  entries.forEach(function(d) {\n'
+    '    var _useWmo = (_synSvgMode === "wmo");\n'
+    '    var _html = _useWmo ? d.svg_wmo : d.svg;\n'
+    '    var _sz   = _useWmo ? [d.sw*0.85, d.sh*0.85] : [d.sw, d.sh];\n'
     '    L.marker([d.lat, d.lon], {\n'
     '      icon: L.divIcon({\n'
-    '        html: d.svg, iconSize:[d.sw,d.sh], iconAnchor:[d.sw/2,d.sh/2], className:""\n'
+    '        html: _html, iconSize:_sz, iconAnchor:[_sz[0]/2,_sz[1]/2], className:""\n'
     '      }), zIndexOffset:100\n'
     '    }).bindPopup(d.popup,{maxWidth:280,closeButton:true}).bindTooltip(d.tip).addTo(_synStnLayer);\n'
     '  });\n'
@@ -2361,9 +2365,9 @@ ts_js = (
     '  if (_synShowSlp) _synSlpLayer.addTo(MAP);\n'   # ← ADD THIS
     '  if (_synShowHL)  _synHLLayer.addTo(MAP);\n'    # ← ADD THIS
     '}\n'
-    'var _synShowSlp = true;\n'
-    'var _synShowHL  = true;\n'
-    'var _synShowSvg = true;\n'
+    'var _synShowSlp  = true;\n'
+    'var _synShowHL   = true;\n'
+    'var _synSvgMode  = "colour";\n'
     'function synToggleLayer(which) {\n'
     '  var keys = Object.keys(window).filter(function(k){return k.startsWith("map_");});\n'
     '  if (!keys.length) return;\n'
@@ -2389,15 +2393,15 @@ ts_js = (
     '      btn2.textContent = "H/L ✗"; btn2.style.background = "#f0f0f0";\n'
     '    }\n'
     '  } else if (which === "svg") {\n'
-    '    _synShowSvg = !_synShowSvg;\n'
+    '    _synSvgMode = (_synSvgMode === "colour") ? "wmo" : "colour";\n'
     '    var btn3 = document.getElementById("btn-svg");\n'
-    '    if (_synShowSvg) {\n'
-    '      if (_synStnLayer) _synStnLayer.addTo(MAP);\n'
-    '      btn3.textContent = "Stn ✓"; btn3.style.background = "#e8f0fe";\n'
+    '    if (_synSvgMode === "wmo") {\n'
+    '      btn3.textContent = "WMO ✓"; btn3.style.background = "#f4e8c8"; btn3.style.color = "#5c2e00"; btn3.style.borderColor = "#9a6a00";\n'
     '    } else {\n'
-    '      if (_synStnLayer) MAP.removeLayer(_synStnLayer);\n'
-    '      btn3.textContent = "Stn ✗"; btn3.style.background = "#f0f0f0";\n'
+    '      btn3.textContent = "Stn ✓"; btn3.style.background = "#e8f0fe"; btn3.style.color = "#1a3a6a"; btn3.style.borderColor = "#aaa";\n'
     '    }\n'
+    '    var _sel = document.getElementById("ts-select");\n'
+    '    if (_sel && _sel.value) synUpdateTS(_sel.value);\n'
     '  }\n'
     '}\n'
     'function synInitDropdown() {\n'
@@ -3228,8 +3232,8 @@ def pressure_tendency_svg(cx, cy, R, tendency, S):
     return ''.join(parts)
 
 
-def station_model_svg(d, S=34):
-    """Full WMO station model SVG."""
+def station_model_svg(d, S=34, wmo_style=False):
+    """Full WMO station model SVG. wmo_style=True skips colour boxes."""
     PAD = S * 1.2
     W   = S * 3 + PAD * 2
     H   = S * 3 + PAD * 2
@@ -3278,7 +3282,7 @@ def station_model_svg(d, S=34):
             _wx_x  = cx - off - 4
             _wx_y  = cy
             _bg, _fade = _wx_bg_color(d.get('weather', ''))
-            if _bg:
+            if _bg and not wmo_style:
                 _char_w = (fs * 0.62)
                 _tw     = len(wx) * _char_w
                 _px, _py = 3, 2
@@ -3314,21 +3318,22 @@ def station_model_svg(d, S=34):
 
     if d['lowest_sig'] and d['lowest_sig']['height'] <= 120:
         _cb = math.ceil(d['lowest_sig']['height'] / 10)
-        _ceil_color = '#880088' if d['lowest_sig']['height'] <= 60 else '#8B4513'
         _cb_str = str(_cb)
         _cb_x = cx
         _cb_y = cy + R + fs * 0.9
-        _char_w = fs * 0.62
-        _tw = len(_cb_str) * _char_w
-        _px, _py = 3, 2
-        parts.append(
-            f'<rect '
-            f'x="{_cb_x - _tw/2 - _px:.1f}" '
-            f'y="{_cb_y - fs * 0.5 - _py:.1f}" '
-            f'width="{_tw + _px * 2:.1f}" '
-            f'height="{fs + _py * 2:.1f}" '
-            f'rx="2" fill="{_ceil_color}" opacity="0.82"/>'
-        )
+        if not wmo_style:
+            _ceil_color = '#880088' if d['lowest_sig']['height'] <= 60 else '#8B4513'
+            _char_w = fs * 0.62
+            _tw = len(_cb_str) * _char_w
+            _px, _py = 3, 2
+            parts.append(
+                f'<rect '
+                f'x="{_cb_x - _tw/2 - _px:.1f}" '
+                f'y="{_cb_y - fs * 0.5 - _py:.1f}" '
+                f'width="{_tw + _px * 2:.1f}" '
+                f'height="{fs + _py * 2:.1f}" '
+                f'rx="2" fill="{_ceil_color}" opacity="0.82"/>'
+            )
         parts.append(txt(_cb_x, _cb_y, _cb_str, anchor='middle'))
     _name_y = cy + R + fs * 0.9 + fs * 1.2
     parts.append(txt(cx, _name_y, d['icao'][-3:], anchor='middle'))
@@ -3617,6 +3622,7 @@ for _ts in _ts_all:
         if _d['timestamp'] != _ts: continue
         pass  # no geographic filter — use all stations
         _svg, _sw, _sh = station_model_svg(_d, S=SYMBOL_SCALE)
+        _svg_wmo, _, _ = station_model_svg(_d, S=SYMBOL_SCALE, wmo_style=True)
         _fc = flight_cat_color(_d)
         _wg = f' G{_d["wind_gust"]}' if _d.get('wind_gust') else ''
         _pop = (
@@ -3635,7 +3641,7 @@ for _ts in _ts_all:
         )
         _entries.append({
             'lat': _d['lat'], 'lon': _d['lon'],
-            'svg': _svg, 'sw': _sw, 'sh': _sh, 'popup': _pop,
+            'svg': _svg, 'svg_wmo': _svg_wmo, 'sw': _sw, 'sh': _sh, 'popup': _pop,
             'tip': f'{_d["icao"]} {_d["temp"]}C/{_d["dew"]}C {_d["wind_dir"]}/{_d["wind_spd"]}kt'
         })
     _ts_data[_ts] = _entries
@@ -3785,9 +3791,9 @@ ts_js = (
     '  if (_synShowSlp) _synSlpLayer.addTo(MAP);\n'   # ← ADD THIS
     '  if (_synShowHL)  _synHLLayer.addTo(MAP);\n'    # ← ADD THIS
     '}\n'
-    'var _synShowSlp = true;\n'
-    'var _synShowHL  = true;\n'
-    'var _synShowSvg = true;\n'
+    'var _synShowSlp  = true;\n'
+    'var _synShowHL   = true;\n'
+    'var _synSvgMode  = "colour";\n'
     'function synToggleLayer(which) {\n'
     '  var keys = Object.keys(window).filter(function(k){return k.startsWith("map_");});\n'
     '  if (!keys.length) return;\n'
@@ -3813,15 +3819,15 @@ ts_js = (
     '      btn2.textContent = "H/L ✗"; btn2.style.background = "#f0f0f0";\n'
     '    }\n'
     '  } else if (which === "svg") {\n'
-    '    _synShowSvg = !_synShowSvg;\n'
+    '    _synSvgMode = (_synSvgMode === "colour") ? "wmo" : "colour";\n'
     '    var btn3 = document.getElementById("btn-svg");\n'
-    '    if (_synShowSvg) {\n'
-    '      if (_synStnLayer) _synStnLayer.addTo(MAP);\n'
-    '      btn3.textContent = "Stn ✓"; btn3.style.background = "#e8f0fe";\n'
+    '    if (_synSvgMode === "wmo") {\n'
+    '      btn3.textContent = "WMO ✓"; btn3.style.background = "#f4e8c8"; btn3.style.color = "#5c2e00"; btn3.style.borderColor = "#9a6a00";\n'
     '    } else {\n'
-    '      if (_synStnLayer) MAP.removeLayer(_synStnLayer);\n'
-    '      btn3.textContent = "Stn ✗"; btn3.style.background = "#f0f0f0";\n'
+    '      btn3.textContent = "Stn ✓"; btn3.style.background = "#e8f0fe"; btn3.style.color = "#1a3a6a"; btn3.style.borderColor = "#aaa";\n'
     '    }\n'
+    '    var _sel = document.getElementById("ts-select");\n'
+    '    if (_sel && _sel.value) synUpdateTS(_sel.value);\n'
     '  }\n'
     '}\n'
     'function synInitDropdown() {\n'
