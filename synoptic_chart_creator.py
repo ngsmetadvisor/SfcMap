@@ -2796,7 +2796,7 @@ new_fn = '''function synSavePNG() {
         var tsStripped = tsVal2.replace(/Z$/i, "");
         var hh = tsStripped.length >= 4 ? tsStripped.slice(-4, -2) : "12";
 
-        var name = "surface_plot_" + yyyy + mm + dd + hh + "Z.png";
+        var name = "surface_plot_" + yyyy + mm + dd + hh + "Z-" + (window._synMetarPNG ? "no_contour" : "with_contour") + ".png";
 
         var link = document.createElement("a");
         link.download = name;
@@ -2865,7 +2865,14 @@ function synExport1200Z() {
   setTimeout(synSavePNG, 800);
 }
 function synExportCurrent() {
-  setTimeout(synSavePNG, 200);
+  var keys = Object.keys(window).filter(function(k){return k.startsWith("map_");});
+  var MAP = keys.length ? window[keys[0]] : null;
+  if (!_synShowSlp && MAP) { _synShowSlp = true; _synSlpLayer.addTo(MAP); var btn=document.getElementById("btn-slp"); if(btn){btn.textContent="Isobars ✓";btn.style.background="#e8f0fe";} }
+  if (!_synShowHL  && MAP) { _synShowHL  = true; _synHLLayer.addTo(MAP);  var btn2=document.getElementById("btn-hl");  if(btn2){btn2.textContent="H/L ✓";btn2.style.background="#e8f0fe";} }
+  var styleEl = document.getElementById("syn-wx-style");
+  if (styleEl) styleEl.textContent = "";
+  if (_synSvgMode === "wmo") { _synSvgMode = "colour"; var btn3=document.getElementById("btn-svg"); if(btn3){btn3.textContent="Stn ✓";btn3.style.background="#e8f0fe";btn3.style.color="#1a3a6a";btn3.style.borderColor="#aaa";} var _sel=document.getElementById("ts-select"); if(_sel&&_sel.value) synUpdateTS(_sel.value); }
+  setTimeout(synSavePNG, 400);
 }
 function synExportCurrentMetar() {
   var hadSlp = _synShowSlp, hadHL = _synShowHL;
@@ -4232,7 +4239,7 @@ new_fn = '''function synSavePNG() {
         var tsStripped = tsVal2.replace(/Z$/i, "");
         var hh = tsStripped.length >= 4 ? tsStripped.slice(-4, -2) : "12";
 
-        var name = "surface_plot_" + yyyy + mm + dd + hh + "Z.png";
+        var name = "surface_plot_" + yyyy + mm + dd + hh + "Z-" + (window._synMetarPNG ? "no_contour" : "with_contour") + ".png";
 
         var link = document.createElement("a");
         link.download = name;
@@ -4301,7 +4308,14 @@ function synExport1200Z() {
   setTimeout(synSavePNG, 800);
 }
 function synExportCurrent() {
-  setTimeout(synSavePNG, 200);
+  var keys = Object.keys(window).filter(function(k){return k.startsWith("map_");});
+  var MAP = keys.length ? window[keys[0]] : null;
+  if (!_synShowSlp && MAP) { _synShowSlp = true; _synSlpLayer.addTo(MAP); var btn=document.getElementById("btn-slp"); if(btn){btn.textContent="Isobars ✓";btn.style.background="#e8f0fe";} }
+  if (!_synShowHL  && MAP) { _synShowHL  = true; _synHLLayer.addTo(MAP);  var btn2=document.getElementById("btn-hl");  if(btn2){btn2.textContent="H/L ✓";btn2.style.background="#e8f0fe";} }
+  var styleEl = document.getElementById("syn-wx-style");
+  if (styleEl) styleEl.textContent = "";
+  if (_synSvgMode === "wmo") { _synSvgMode = "colour"; var btn3=document.getElementById("btn-svg"); if(btn3){btn3.textContent="Stn ✓";btn3.style.background="#e8f0fe";btn3.style.color="#1a3a6a";btn3.style.borderColor="#aaa";} var _sel=document.getElementById("ts-select"); if(_sel&&_sel.value) synUpdateTS(_sel.value); }
+  setTimeout(synSavePNG, 400);
 }
 function synExportCurrentMetar() {
   var hadSlp = _synShowSlp, hadHL = _synShowHL;
@@ -4491,7 +4505,7 @@ new_fn = '''function synSavePNG() {
         var tsStripped = tsValF.replace(/Z$/i, "");
         var hh = tsStripped.length >= 4 ? tsStripped.slice(-4, -2) : "12";
 
-        var name = "surface_plot_" + yyyy + mm + dd + hh + "Z-with_contour.png";
+        var name = "surface_plot_" + yyyy + mm + dd + hh + "Z-" + (window._synMetarPNG ? "no_contour" : "with_contour") + ".png";
 
 
 
@@ -4652,6 +4666,13 @@ if True:  # always inject
     _btn_clr = "#5c2e00" if EXPORT_TIME in ("1800Z","0000Z") else "#1a3a6a"
     export_js = '''<script>
 function synExport1200Z() {
+  var keys = Object.keys(window).filter(function(k){return k.startsWith("map_");});
+  var MAP = keys.length ? window[keys[0]] : null;
+  if (!_synShowSlp && MAP) { _synShowSlp = true; _synSlpLayer.addTo(MAP); var btn=document.getElementById("btn-slp"); if(btn){btn.textContent="Isobars ✓";btn.style.background="#e8f0fe";} }
+  if (!_synShowHL  && MAP) { _synShowHL  = true; _synHLLayer.addTo(MAP);  var btn2=document.getElementById("btn-hl");  if(btn2){btn2.textContent="H/L ✓";btn2.style.background="#e8f0fe";} }
+  var styleEl = document.getElementById("syn-wx-style");
+  if (styleEl) styleEl.textContent = "";
+  if (_synSvgMode === "wmo") { _synSvgMode = "colour"; var btn3=document.getElementById("btn-svg"); if(btn3){btn3.textContent="Stn ✓";btn3.style.background="#e8f0fe";btn3.style.color="#1a3a6a";btn3.style.borderColor="#aaa";} var _sel=document.getElementById("ts-select"); if(_sel&&_sel.value) synUpdateTS(_sel.value); }
   var sel = document.getElementById("ts-select");
   if (sel) {
     var hh = "{EXPORT_TIME}".replace("Z","");
@@ -4667,7 +4688,14 @@ function synExport1200Z() {
   setTimeout(synSavePNG, 800);
 }
 function synExportCurrent() {
-  setTimeout(synSavePNG, 200);
+  var keys = Object.keys(window).filter(function(k){return k.startsWith("map_");});
+  var MAP = keys.length ? window[keys[0]] : null;
+  if (!_synShowSlp && MAP) { _synShowSlp = true; _synSlpLayer.addTo(MAP); var btn=document.getElementById("btn-slp"); if(btn){btn.textContent="Isobars ✓";btn.style.background="#e8f0fe";} }
+  if (!_synShowHL  && MAP) { _synShowHL  = true; _synHLLayer.addTo(MAP);  var btn2=document.getElementById("btn-hl");  if(btn2){btn2.textContent="H/L ✓";btn2.style.background="#e8f0fe";} }
+  var styleEl = document.getElementById("syn-wx-style");
+  if (styleEl) styleEl.textContent = "";
+  if (_synSvgMode === "wmo") { _synSvgMode = "colour"; var btn3=document.getElementById("btn-svg"); if(btn3){btn3.textContent="Stn ✓";btn3.style.background="#e8f0fe";btn3.style.color="#1a3a6a";btn3.style.borderColor="#aaa";} var _sel=document.getElementById("ts-select"); if(_sel&&_sel.value) synUpdateTS(_sel.value); }
+  setTimeout(synSavePNG, 400);
 }
 function synExportCurrentMetar() {
   var hadSlp = _synShowSlp, hadHL = _synShowHL;
