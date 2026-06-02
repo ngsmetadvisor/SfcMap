@@ -2406,17 +2406,28 @@ ts_js = (
     '    }\n'
     '  }\n'
     '}\n'
-    'function synInitDropdown() {\n'
+    'function synTsToUtc(ts) {\n'
+    '  var clean=ts.replace(/Z$/i,""); var dd=parseInt(clean.slice(0,2),10);\n'
+    '  var hh=parseInt(clean.slice(2,4),10); var mn=parseInt(clean.slice(4,6)||"0",10);\n'
+    '  var now=new Date();\n'
+    '  var d=new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),dd,hh,mn,0));\n'
+    '  if(dd-now.getUTCDate()>15) d.setUTCMonth(d.getUTCMonth()-1);\n'
+    '  return d;\n'
+    '}\n'
+'function synInitDropdown() {\n'
     '  var sel = document.getElementById("ts-select");\n'
     '  if (!sel) { setTimeout(synInitDropdown, 200); return; }\n'
+    '  var nowUtc = new Date();\n'
+    '  var latest = null;\n'
     '  _SYN_TS_LIST.forEach(function(ts) {\n'
+    '    if (synTsToUtc(ts) > nowUtc) return;\n'
     '    var opt = document.createElement("option");\n'
     '    opt.value = ts; opt.textContent = ts;\n'
-    '    if (ts === _SYN_TS_LIST[_SYN_TS_LIST.length-1]) opt.selected = true;\n'
     '    sel.appendChild(opt);\n'
+    '    latest = ts;\n'
     '  });\n'
-    '  var latest = _SYN_TS_LIST[_SYN_TS_LIST.length-1];\n'
-    '  if (latest) synUpdateTS(latest);\n'
+    '  if (!latest && _SYN_TS_LIST.length) latest = _SYN_TS_LIST[0];\n'
+    '  if (latest) { sel.value = latest; synUpdateTS(latest); }\n'
     '}\n'
     'if (document.readyState==="complete") { setTimeout(synInitDropdown,500); }\n'
     'else { window.addEventListener("load",function(){setTimeout(synInitDropdown,500);}); }\n'
@@ -3854,17 +3865,28 @@ ts_js = (
     '    }\n'
     '  }\n'
     '}\n'
-    'function synInitDropdown() {\n'
+    'function synTsToUtc(ts) {\n'
+    '  var clean=ts.replace(/Z$/i,""); var dd=parseInt(clean.slice(0,2),10);\n'
+    '  var hh=parseInt(clean.slice(2,4),10); var mn=parseInt(clean.slice(4,6)||"0",10);\n'
+    '  var now=new Date();\n'
+    '  var d=new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),dd,hh,mn,0));\n'
+    '  if(dd-now.getUTCDate()>15) d.setUTCMonth(d.getUTCMonth()-1);\n'
+    '  return d;\n'
+    '}\n'
+'function synInitDropdown() {\n'
     '  var sel = document.getElementById("ts-select");\n'
     '  if (!sel) { setTimeout(synInitDropdown, 200); return; }\n'
+    '  var nowUtc = new Date();\n'
+    '  var latest = null;\n'
     '  _SYN_TS_LIST.forEach(function(ts) {\n'
+    '    if (synTsToUtc(ts) > nowUtc) return;\n'
     '    var opt = document.createElement("option");\n'
     '    opt.value = ts; opt.textContent = ts;\n'
-    '    if (ts === _SYN_TS_LIST[_SYN_TS_LIST.length-1]) opt.selected = true;\n'
     '    sel.appendChild(opt);\n'
+    '    latest = ts;\n'
     '  });\n'
-    '  var latest = _SYN_TS_LIST[_SYN_TS_LIST.length-1];\n'
-    '  if (latest) synUpdateTS(latest);\n'
+    '  if (!latest && _SYN_TS_LIST.length) latest = _SYN_TS_LIST[0];\n'
+    '  if (latest) { sel.value = latest; synUpdateTS(latest); }\n'
     '}\n'
     'if (document.readyState==="complete") { setTimeout(synInitDropdown,500); }\n'
     'else { window.addEventListener("load",function(){setTimeout(synInitDropdown,500);}); }\n'
@@ -4761,7 +4783,28 @@ function synShowRunPanel() {
   if(p.style.display==="flex") setTimeout(function(){document.getElementById("gha-pin").focus();},50);
   try{var _lrt=localStorage.getItem("syn_last_run");var _lrel=document.getElementById("gha-last-run");if(_lrel&&_lrt)_lrel.textContent="Last: "+_lrt;}catch(e){}
 }
-function synInitLastRun() {try{var _lrt=localStorage.getItem("syn_last_run");var _lrel=document.getElementById("gha-last-run");if(_lrel&&_lrt)_lrel.textContent="Last: "+_lrt;}catch(e){}}
+function synInitLastRun() {
+  var _lrel=document.getElementById("gha-last-run");
+  if(!_lrel) return;
+  // Try localStorage first (instant)
+  try{var _lrt=localStorage.getItem("syn_last_run");if(_lrt){_lrel.textContent="Last: "+_lrt;}}catch(e){}
+  // Then fetch actual last run time from GitHub API (public, no token needed)
+  fetch("https://api.github.com/repos/ngsmetadvisor/SfcMap/actions/workflows/synoptic_chart.yml/runs?per_page=1&status=success",{
+    headers:{Accept:"application/vnd.github+json"}
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    var runs=d.workflow_runs||[];
+    if(!runs.length) return;
+    var _dt=new Date(runs[0].updated_at);
+    var _lrt=_dt.getUTCFullYear()+"-"
+      +String(_dt.getUTCMonth()+1).padStart(2,"0")+"-"
+      +String(_dt.getUTCDate()).padStart(2,"0")+" "
+      +String(_dt.getUTCHours()).padStart(2,"0")+":"
+      +String(_dt.getUTCMinutes()).padStart(2,"0")+"Z";
+    _lrel.textContent="Last: "+_lrt;
+    try{localStorage.setItem("syn_last_run",_lrt);}catch(e){}
+  }).catch(function(){});
+}
 setTimeout(synInitLastRun, 800);
 function synBuildStepRows() {
   var c=document.getElementById("gha-steps"); c.innerHTML="";
