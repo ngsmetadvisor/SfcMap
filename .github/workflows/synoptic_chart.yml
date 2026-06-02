@@ -1,0 +1,92 @@
+name: Synoptic Chart
+
+on:
+  # ── Manual trigger (the "Run workflow" button in the Actions tab) ──────────
+  workflow_dispatch:
+    inputs:
+      export_time:
+        description: "Chart export time label (e.g. 1200Z, 1800Z)"
+        required: false
+        default: "1200Z"
+
+  # ── Scheduled runs ────────────────────────────────────────────────────────
+  schedule:
+    - cron: "37 13 * * *"   # 13:37 UTC daily
+    - cron: "37 18 * * *"   # 18:37 UTC daily
+
+jobs:
+  build:
+    name: Generate synoptic chart
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # needed to push output/ back to the repo
+
+    steps:
+      # ── 1. Checkout ─────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── 2. Python setup ─────────────────────────────────────────────────
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      # ── 3. Install dependencies ─────────────────────────────────────────
+      - name: Install Python packages
+        run: |
+          pip install --upgrade pip
+          pip install requests scipy matplotlib numpy pykrige folium shapely branca pandas
+
+      # ── 4. Set EXPORT_TIME env var ────────────────────────────────────
+      #       Scheduled 13:37 run → 1200Z ; 18:37 run → 1800Z
+      #       Manual run          → whatever the user typed in the input
+      - name: Determine export time
+        id: export_time
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "EXPORT_TIME=${{ github.event.inputs.export_time }}" >> "$GITHUB_ENV"
+          elif [ "${{ github.event.schedule }}" = "37 13 * * *" ]; then
+            echo "EXPORT_TIME=1200Z" >> "$GITHUB_ENV"
+          else
+            echo "EXPORT_TIME=1800Z" >> "$GITHUB_ENV"
+          fi
+
+      # ── 5. Create output directory ──────────────────────────────────────
+      - name: Prepare output directory
+        run: mkdir -p output
+
+      # ── 6. Run the chart generator ──────────────────────────────────────
+      - name: Generate synoptic_map.html
+        run: |
+          # Patch EXPORT_TIME in the script at runtime so it matches the run
+          sed -i "s/^EXPORT_TIME  = '.*'/EXPORT_TIME  = '$EXPORT_TIME'/" synoptic_chart_creator.py
+          python synoptic_chart_creator.py
+
+      # ── 7. Rename output with timestamp ─────────────────────────────────
+      - name: Stamp output file
+        run: |
+          STAMP=$(date -u +"%Y%m%d_%H%MZ")
+          cp output/synoptic_map.html "output/synoptic_map_${STAMP}.html"
+          # Keep synoptic_map.html as the "latest" alias too
+          echo "STAMP=$STAMP" >> "$GITHUB_ENV"
+
+      # ── 8. Upload as workflow artifact (always available, no git push needed) ──
+      - name: Upload chart as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: synoptic-chart-${{ env.STAMP }}
+          path: output/synoptic_map*.html
+          retention-days: 30
+
+      # ── 9. Commit & push output/ back to repo (optional — remove if unwanted) ─
+      - name: Commit output to repository
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add output/
+          # Only commit if there's actually something new
+          git diff --cached --quiet || \
+            git commit -m "chore: synoptic chart ${STAMP} [skip ci]"
+          git push
