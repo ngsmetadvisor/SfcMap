@@ -147,7 +147,7 @@ CYYL,Lynn Lake,56.863,-101.073,MB,,Standard,All,CHART
 CYBQ,Tadoule Lake,58.707,-98.511,MB,,Standard,All,CHART
 CYTH,Thompson,55.803,-97.846,MB,,Standard,All,CHART
 CYIV,Island Lake,53.857,-94.655,MB,,Standard,All,CHART
-CYLT,Alert,82.512,-62.317,NU,,,,CHART
+CYLT,Alert,82.512,-62.317,NU,,Standard,All,CHART
 PANC,Anchorage,61.169,-150.028,AK,,Standard,All,CHART
 CYQB,Quebec International,46.791,-71.396,QC,Essential,Standard,All,CHART
 CYYT,St John International,47.627,-52.748,NL,Essential,Standard,All,CHART
@@ -162,8 +162,8 @@ CYPX,Puvirnituq,60.045,-77.281,NU,,Standard,All,CHART
 CYCY,Clyde River,70.484,-68.515,NU,,Standard,All,CHART
 CWGZ,Grise Fiord,76.423,-82.902,NU,,Standard,All,CHART
 CYXT,Terrace,54.471,-128.577,BC,,Standard,All,
-KMGM,Montgomery,32.3,-86.394,AL,,,All,CHART
-KBHM,Birmingham,33.563,-86.754,AL,,,All,CHART
+KMGM,Montgomery,32.3,-86.394,AL,,,All,
+KBHM,Birmingham,33.563,-86.754,AL,,,All,
 PAJN,Juneau,58.355,-134.576,AK,,,All,CHART
 PAJC,Chignik,56.312,-158.374,AK,,,All,CHART
 KPHX,Phoenix,33.435,-112.007,AZ,,,All,CHART
@@ -171,31 +171,31 @@ KLIT,Little Rock,34.729,-92.225,AR,,,All,CHART
 KSMF,Sacramento,38.695,-121.59,CA,,,All,CHART
 KLAX,Los Angeles,33.942,-118.409,CA,,,All,CHART
 KDEN,Denver,39.856,-104.673,CO,,,All,CHART
-KBDL,Hartford,41.939,-72.683,CT,,,All,CHART
-KDOV,Dover,39.129,-75.466,DE,,,All,CHART
-KPHL,Philadelphia,39.872,-75.241,PA,,,All,CHART
-KTLH,Tallahassee,30.396,-84.35,FL,,,All,CHART
-KMIA,Miami,25.795,-80.287,FL,,,All,CHART
-KATL,Atlanta,33.64,-84.427,GA,,,All,CHART
+KBDL,Hartford,41.939,-72.683,CT,,,All,
+KDOV,Dover,39.129,-75.466,DE,,,All,
+KPHL,Philadelphia,39.872,-75.241,PA,,,All,
+KTLH,Tallahassee,30.396,-84.35,FL,,,All,
+KMIA,Miami,25.795,-80.287,FL,,,All,
+KATL,Atlanta,33.64,-84.427,GA,,,All,
 PHNL,Honolulu,21.318,-157.922,HI,,,All,CHART
 KBOI,Boise,43.564,-116.223,ID,,,All,CHART
 KSPI,Springfield,39.844,-89.678,IL,,,All,
-KORD,Chicago,41.974,-87.907,IL,,,All,CHART
-KIND,Indianapolis,39.717,-86.295,IN,,,All,CHART
+KORD,Chicago,41.974,-87.907,IL,,,All,
+KIND,Indianapolis,39.717,-86.295,IN,,,All,
 KDSM,Des Moines,41.534,-93.663,IA,,,All,CHART
 KTOP,Topeka,39.069,-95.623,KS,,,All,CHART
 KICT,Wichita,37.65,-97.433,KS,,,All,CHART
-KFFT,Frankfort,38.182,-84.904,KY,,,All,CHART
-KSDF,Louisville,38.174,-85.736,KY,,,All,CHART
+KFFT,Frankfort,38.182,-84.904,KY,,,All,
+KSDF,Louisville,38.174,-85.736,KY,,,All,
 KBTR,Baton Rouge Metropolitan,30.538,-91.147,LA,,,All,CHART
 KMSY,New Orleans,29.993,-90.258,LA,,,All,CHART
-KAUG,Augusta,44.32,-69.797,ME,,,All,CHART
-KPWM,Portland,43.646,-70.309,ME,,,All,CHART
-KMTN,Baltimore,39.325,-76.413,MD,,,All,CHART
-KBWI,Baltimore/Washington,39.175,-76.668,MD,,,All,CHART
-KBOS,Boston,42.365,-71.009,MA,,,All,CHART
-KLAN,Lansing,42.779,-84.587,MI,,,All,CHART
-KDTW,Detroit,42.216,-83.355,MI,,,All,CHART
+KAUG,Augusta,44.32,-69.797,ME,,,All,
+KPWM,Portland,43.646,-70.309,ME,,,All,
+KMTN,Baltimore,39.325,-76.413,MD,,,All,
+KBWI,Baltimore/Washington,39.175,-76.668,MD,,,All,
+KBOS,Boston,42.365,-71.009,MA,,,All,
+KLAN,Lansing,42.779,-84.587,MI,,,All,
+KDTW,Detroit,42.216,-83.355,MI,,,All,
 KMSP,Minneapolis,44.882,-93.222,MN,,Standard,All,CHART
 KJAN,Jackson,32.311,-90.076,MS,,,All,CHART
 KJEF,Jefferson City,38.591,-92.157,MO,,,All,CHART
@@ -206,42 +206,42 @@ KLNK,Lincoln,40.851,-96.759,NE,,,All,CHART
 KOMA,Omaha,41.303,-95.894,NE,,,All,
 KCXP,Carson City,39.192,-119.734,NV,,,All,CHART
 KLAS,Las Vegas,36.085,-115.153,NV,,,All,CHART
-KCON,Concord,43.203,-71.502,NH,,,All,CHART
-KMHT,Manchester,42.933,-71.438,NH,,,All,CHART
-KTTN,Trenton,40.276,-74.814,NJ,,,All,CHART
-KEWR,Newark,40.689,-74.174,NJ,,,All,CHART
+KCON,Concord,43.203,-71.502,NH,,,All,
+KMHT,Manchester,42.933,-71.438,NH,,,All,
+KTTN,Trenton,40.276,-74.814,NJ,,,All,
+KEWR,Newark,40.689,-74.174,NJ,,,All,
 KSAF,Santa Fe,35.617,-106.089,NM,,,All,CHART
 KABQ,Albuquerque,35.04,-106.609,NM,,,All,CHART
-KALB,Albany,42.748,-73.803,NY,,,All,CHART
-KJFK,New York,40.641,-73.778,NY,,,All,CHART
-KRDU,Raleigh,35.877,-78.787,NC,,,All,CHART
-KCLT,Charlotte,35.214,-80.943,NC,,,All,CHART
+KALB,Albany,42.748,-73.803,NY,,,All,
+KJFK,New York,40.641,-73.778,NY,,,All,
+KRDU,Raleigh,35.877,-78.787,NC,,,All,
+KCLT,Charlotte,35.214,-80.943,NC,,,All,
 KBIS,Bismarck,46.772,-100.746,ND,,Standard,All,CHART
 KFAR,Fargo,46.92,-96.815,ND,,Standard,All,CHART
-KCMH,Columbus,39.998,-82.892,OH,,,All,CHART
-KCLE,Cleveland,41.412,-81.849,OH,,,All,CHART
+KCMH,Columbus,39.998,-82.892,OH,,,All,
+KCLE,Cleveland,41.412,-81.849,OH,,,All,
 KOKC,Oklahoma City,35.393,-97.601,OK,,,All,CHART
 KSLE,Salem,44.909,-123.003,OR,,Standard,All,
 KPDX,Portland,45.589,-122.597,OR,,,All,CHART
-KMDT,Harrisburg,40.193,-76.763,PA,,,All,CHART
-KPVD,Providence,41.724,-71.428,RI,,,All,CHART
-KCAE,Columbia,33.939,-81.119,SC,,,All,CHART
-KCHS,Charleston,32.899,-80.041,SC,,,All,CHART
+KMDT,Harrisburg,40.193,-76.763,PA,,,All,
+KPVD,Providence,41.724,-71.428,RI,,,All,
+KCAE,Columbia,33.939,-81.119,SC,,,All,
+KCHS,Charleston,32.899,-80.041,SC,,,All,
 KPIR,Pierre,44.382,-100.286,SD,,,All,CHART
 KFSD,Sioux Falls,43.582,-96.741,SD,,,All,
-KBNA,Nashville,36.124,-86.678,TN,,,All,CHART
+KBNA,Nashville,36.124,-86.678,TN,,,All,
 KAUS,Austin,30.197,-97.666,TX,,,All,CHART
 KDFW,Dallas-Fort Worth,32.899,-97.04,TX,,,All,CHART
 KSLC,Salt Lake City,40.789,-111.979,UT,,,All,CHART
-KMPV,Montpelier,44.203,-72.562,VT,,,All,CHART
-KBTV,Burlington,44.471,-73.153,VT,,,All,CHART
-KRIC,Richmond,37.506,-77.32,VA,,,All,CHART
-KIAD,Washington Dulles,38.953,-77.456,VA,,,All,CHART
+KMPV,Montpelier,44.203,-72.562,VT,,,All,
+KBTV,Burlington,44.471,-73.153,VT,,,All,
+KRIC,Richmond,37.506,-77.32,VA,,,All,
+KIAD,Washington Dulles,38.953,-77.456,VA,,,All,
 KOLM,Olympia,46.97,-122.903,WA,,,All,
 KSEA,Seattle,47.45,-122.309,WA,,Standard,All,CHART
-KCRW,Charleston,38.373,-81.593,WV,,,All,CHART
+KCRW,Charleston,38.373,-81.593,WV,,,All,
 KMSN,Madison,43.14,-89.337,WI,,,All,CHART
-KMKE,Milwaukee,42.947,-87.897,WI,,,All,CHART
+KMKE,Milwaukee,42.947,-87.897,WI,,,All,
 KCYS,Cheyenne,41.156,-104.812,WY,,,All,
 KJAC,Jackson,43.607,-110.738,WY,,,All,
 KOAK,Oakland,37.721,-122.221,CA,,,All,
@@ -251,19 +251,19 @@ PHTO,Hilo,19.72,-155.048,HI,,,All,CHART
 PGUM,Guam,13.4836,-221.7961,GU,,,All,CHART
 PMDY,Midway Atoll,28.202,-177.381,UM,,,All,CHART
 KSFO,San Francisco International Airport,37.619,-122.375,US,,,All,CHART
-CYTE,Cape Dorset,64.23,-76.526,NU,,,All,CHART
-CYZS,Coral Harbour,64.193,-83.359,NU,,,All,CHART
+CYTE,Cape Dorset,64.23,-76.526,NU,,,All,
+CYZS,Coral Harbour,64.193,-83.359,NU,,,All,
 CYCS,Chesterfield Inlet,63.347,-90.731,NU,,,All,CHART
-CYUT,Repulse Bay,66.522,-86.225,NU,,,All,CHART
-CYUX,Hall Beach,68.776,-81.243,NU,,,All,CHART
-CYIO,Pond Inlet,72.683,-77.967,NU,,,All,CHART
+CYUT,Repulse Bay,66.522,-86.225,NU,,,All,
+CYUX,Hall Beach,68.776,-81.243,NU,,,All,
+CYIO,Pond Inlet,72.683,-77.967,NU,,,All,
 CYIN,Clinton Ranch,51.265,-121.681,BC,,,All,CHART
-CYVM,Qikiqtarjuaq,67.545,-64.032,NU,,,All,CHART
-CYKG,Kangiqsujuaq,61.589,-71.926,NU,,,All,CHART
-CYKQ,Waskaganish,51.473,-78.758,QC,,,All,CHART
-CYGW,Kuujjuarapik,55.281,-77.765,QC,,,All,CHART
-CYAS,Kangirsuk,60.027,-69.999,QC,,,All,CHART
-CYLU,Kanuapscow,54.833,-69.583,QC,,,All,CHART
+CYVM,Qikiqtarjuaq,67.545,-64.032,NU,,,All,
+CYKG,Kangiqsujuaq,61.589,-71.926,NU,,,All,
+CYKQ,Waskaganish,51.473,-78.758,QC,,,All,
+CYGW,Kuujjuarapik,55.281,-77.765,QC,,,All,
+CYAS,Kangirsuk,60.027,-69.999,QC,,,All,
+CYLU,Kanuapscow,54.833,-69.583,QC,,,All,
 CYWP,Webequie,52.954,-87.374,ON,,,All,
 CYKP,Kasabonika,53.524,-88.643,ON,,,All,CHART
 CZMD,Muskrat Dam,53.441,-91.763,ON,,,All,CHART
@@ -388,4 +388,3 @@ CYFH,Fort Hope,51.562,-87.908,ON,,,,
 CYTX,Terrace Bay,48.5,-87.0833,ON,,,,
 CYGH,Fort Good Hope,66.242,-128.644,NWT,,,All,CHART
 KXWA,Williston Basin,48.254,-103.747,ND,,,All,CHART
-
