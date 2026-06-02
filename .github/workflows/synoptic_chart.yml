@@ -47,7 +47,17 @@ jobs:
           else                        echo "EXPORT_TIME=1800Z" >> "$GITHUB_ENV"
           fi
 
-      # ── 5. Run the chart generator ───────────────────────────────────────
+      # ── 5. Cache station list CSV ────────────────────────────────────────
+      #       Avoids depending on orangecore.net being reachable every run.
+      #       The cache is keyed on the file content — update by deleting
+      #       the cache entry in Actions → Caches if the CSV ever changes.
+      - name: Cache station list
+        uses: actions/cache@v4
+        with:
+          path: AP_location.csv
+          key: ap-location-csv-v1
+
+      # ── 6. Run the chart generator ───────────────────────────────────────
       - name: Generate synoptic_map.html
         run: |
           mkdir -p output
@@ -101,6 +111,6 @@ jobs:
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add docs/
-          git diff --cached --quiet || \
-            git commit -m "chore: synoptic chart ${STAMP} [skip ci]"
+          git diff --cached --quiet ||             git commit -m "chore: synoptic chart ${STAMP} [skip ci]"
+          git pull --rebase origin main
           git push
