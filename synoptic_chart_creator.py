@@ -2822,8 +2822,13 @@ html = html.replace('var _synShowHL  = true;', 'var _synShowHL  = false;')
 
 # ── Inject synExport1200Z ─────────────────────────────────────────────
 import re
-html = re.sub(r'<script>\s*function synExport1200Z[\s\S]*?</script>\s*<div[^>]*>.*?</div>', '', html, flags=re.DOTALL)
-if 'synExport1200Z' not in html:
+_body_idx = html.rfind('</body>')
+_inject_idx = html.rfind('<script>', 0, _body_idx)
+while _inject_idx != -1 and 'synExport1200Z' not in html[_inject_idx:_body_idx]:
+    _inject_idx = html.rfind('<script>', 0, _inject_idx)
+if _inject_idx != -1 and 'synExport1200Z' in html[_inject_idx:_body_idx]:
+    html = html[:_inject_idx] + html[_body_idx:]
+if True:  # always inject
 
     _btn_bg  = "#ffd8a8" if EXPORT_TIME in ("1800Z","0000Z") else "#c8dff4"
     _btn_bdr = "#a85c00" if EXPORT_TIME in ("1800Z","0000Z") else "#1a4a8a"
@@ -4192,8 +4197,13 @@ html = html.replace('var _synShowHL  = true;', 'var _synShowHL  = false;')
 
 # ── Inject synExport1200Z ─────────────────────────────────────────────
 import re
-html = re.sub(r'<script>\s*function synExport1200Z[\s\S]*?</script>\s*<div[^>]*>.*?</div>', '', html, flags=re.DOTALL)
-if 'synExport1200Z' not in html:
+_body_idx = html.rfind('</body>')
+_inject_idx = html.rfind('<script>', 0, _body_idx)
+while _inject_idx != -1 and 'synExport1200Z' not in html[_inject_idx:_body_idx]:
+    _inject_idx = html.rfind('<script>', 0, _inject_idx)
+if _inject_idx != -1 and 'synExport1200Z' in html[_inject_idx:_body_idx]:
+    html = html[:_inject_idx] + html[_body_idx:]
+if True:  # always inject
 
     _btn_bg  = "#ffd8a8" if EXPORT_TIME in ("1800Z","0000Z") else "#c8dff4"
     _btn_bdr = "#a85c00" if EXPORT_TIME in ("1800Z","0000Z") else "#1a4a8a"
@@ -4511,9 +4521,14 @@ else:
 html = html.replace('var _synShowSlp = false;', 'var _synShowSlp = true;')
 html = html.replace('var _synShowHL  = false;', 'var _synShowHL  = true;')
 
-# Always re-inject to pick up new EXPORT_TIME
-html = re.sub(r'<script>\s*function synExport1200Z[\s\S]*?</script>\s*<div[^>]*>.*?</div>', '', html, flags=re.DOTALL)
-if 'synExport1200Z' not in html:
+# Always re-inject — strip previous injection block completely
+_body_idx = html.rfind('</body>')
+_inject_idx = html.rfind('<script>', 0, _body_idx)
+while _inject_idx != -1 and 'synExport1200Z' not in html[_inject_idx:_body_idx]:
+    _inject_idx = html.rfind('<script>', 0, _inject_idx)
+if _inject_idx != -1 and 'synExport1200Z' in html[_inject_idx:_body_idx]:
+    html = html[:_inject_idx] + html[_body_idx:]
+if True:  # always inject
     _btn_bg  = "#ffd8a8" if EXPORT_TIME in ("1800Z","0000Z") else "#c8dff4"
     _btn_bdr = "#a85c00" if EXPORT_TIME in ("1800Z","0000Z") else "#1a4a8a"
     _btn_clr = "#5c2e00" if EXPORT_TIME in ("1800Z","0000Z") else "#1a3a6a"
@@ -4793,7 +4808,5 @@ display(HTML(
     + _html +
     f'</div>'
 ))
-
-
 
 print("\n✓ synoptic_map.html written to output/")
