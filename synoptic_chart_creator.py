@@ -2871,12 +2871,17 @@ function synExportCurrentMetar() {
   var hadSlp = _synShowSlp, hadHL = _synShowHL;
   if (hadSlp) { _synShowSlp = false; _synSlpLayer.remove(); }
   if (hadHL)  { _synShowHL  = false; _synHLLayer.remove();  }
+  var styleEl = document.getElementById("syn-wx-style");
+  if (!styleEl) { styleEl = document.createElement("style"); styleEl.id = "syn-wx-style"; document.head.appendChild(styleEl); }
+  var hadWxHidden = styleEl.textContent.indexOf("syn-wx-box") !== -1;
+  styleEl.textContent = ".syn-wx-box { display: none !important; }";
   window._synMetarPNG = true;
   setTimeout(function() {
     synSavePNG();
     setTimeout(function() {
       if (hadSlp) { _synShowSlp = true; _synSlpLayer.addTo(MAP); }
       if (hadHL)  { _synShowHL  = true; _synHLLayer.addTo(MAP);  }
+      if (!hadWxHidden) styleEl.textContent = "";
       window._synMetarPNG = false;
     }, 3000);
   }, 200);
@@ -2893,12 +2898,17 @@ function synExportMetar() {
   var hadSlp = _synShowSlp, hadHL = _synShowHL;
   if (hadSlp) { _synShowSlp = false; _synSlpLayer.remove(); }
   if (hadHL)  { _synShowHL  = false; _synHLLayer.remove();  }
+  var styleEl = document.getElementById("syn-wx-style");
+  if (!styleEl) { styleEl = document.createElement("style"); styleEl.id = "syn-wx-style"; document.head.appendChild(styleEl); }
+  var hadWxHidden = styleEl.textContent.indexOf("syn-wx-box") !== -1;
+  styleEl.textContent = ".syn-wx-box { display: none !important; }";
   window._synMetarPNG = true;
   setTimeout(function() {
     synSavePNG();
     setTimeout(function() {
       if (hadSlp) { _synShowSlp = true; _synSlpLayer.addTo(MAP); }
       if (hadHL)  { _synShowHL  = true; _synHLLayer.addTo(MAP);  }
+      if (!hadWxHidden) styleEl.textContent = "";
       window._synMetarPNG = false;
     }, 3000);
   }, 200);
@@ -4297,12 +4307,17 @@ function synExportCurrentMetar() {
   var hadSlp = _synShowSlp, hadHL = _synShowHL;
   if (hadSlp) { _synShowSlp = false; _synSlpLayer.remove(); }
   if (hadHL)  { _synShowHL  = false; _synHLLayer.remove();  }
+  var styleEl = document.getElementById("syn-wx-style");
+  if (!styleEl) { styleEl = document.createElement("style"); styleEl.id = "syn-wx-style"; document.head.appendChild(styleEl); }
+  var hadWxHidden = styleEl.textContent.indexOf("syn-wx-box") !== -1;
+  styleEl.textContent = ".syn-wx-box { display: none !important; }";
   window._synMetarPNG = true;
   setTimeout(function() {
     synSavePNG();
     setTimeout(function() {
       if (hadSlp) { _synShowSlp = true; _synSlpLayer.addTo(MAP); }
       if (hadHL)  { _synShowHL  = true; _synHLLayer.addTo(MAP);  }
+      if (!hadWxHidden) styleEl.textContent = "";
       window._synMetarPNG = false;
     }, 3000);
   }, 200);
@@ -4319,12 +4334,17 @@ function synExportMetar() {
   var hadSlp = _synShowSlp, hadHL = _synShowHL;
   if (hadSlp) { _synShowSlp = false; _synSlpLayer.remove(); }
   if (hadHL)  { _synShowHL  = false; _synHLLayer.remove();  }
+  var styleEl = document.getElementById("syn-wx-style");
+  if (!styleEl) { styleEl = document.createElement("style"); styleEl.id = "syn-wx-style"; document.head.appendChild(styleEl); }
+  var hadWxHidden = styleEl.textContent.indexOf("syn-wx-box") !== -1;
+  styleEl.textContent = ".syn-wx-box { display: none !important; }";
   window._synMetarPNG = true;
   setTimeout(function() {
     synSavePNG();
     setTimeout(function() {
       if (hadSlp) { _synShowSlp = true; _synSlpLayer.addTo(MAP); }
       if (hadHL)  { _synShowHL  = true; _synHLLayer.addTo(MAP);  }
+      if (!hadWxHidden) styleEl.textContent = "";
       window._synMetarPNG = false;
     }, 3000);
   }, 200);
@@ -4653,12 +4673,17 @@ function synExportCurrentMetar() {
   var hadSlp = _synShowSlp, hadHL = _synShowHL;
   if (hadSlp) { _synShowSlp = false; _synSlpLayer.remove(); }
   if (hadHL)  { _synShowHL  = false; _synHLLayer.remove();  }
+  var styleEl = document.getElementById("syn-wx-style");
+  if (!styleEl) { styleEl = document.createElement("style"); styleEl.id = "syn-wx-style"; document.head.appendChild(styleEl); }
+  var hadWxHidden = styleEl.textContent.indexOf("syn-wx-box") !== -1;
+  styleEl.textContent = ".syn-wx-box { display: none !important; }";
   window._synMetarPNG = true;
   setTimeout(function() {
     synSavePNG();
     setTimeout(function() {
       if (hadSlp) { _synShowSlp = true; _synSlpLayer.addTo(MAP); }
       if (hadHL)  { _synShowHL  = true; _synHLLayer.addTo(MAP);  }
+      if (!hadWxHidden) styleEl.textContent = "";
       window._synMetarPNG = false;
     }, 3000);
   }, 200);
@@ -4675,12 +4700,17 @@ function synExportMetar() {
   var hadSlp = _synShowSlp, hadHL = _synShowHL;
   if (hadSlp) { _synShowSlp = false; _synSlpLayer.remove(); }
   if (hadHL)  { _synShowHL  = false; _synHLLayer.remove();  }
+  var styleEl = document.getElementById("syn-wx-style");
+  if (!styleEl) { styleEl = document.createElement("style"); styleEl.id = "syn-wx-style"; document.head.appendChild(styleEl); }
+  var hadWxHidden = styleEl.textContent.indexOf("syn-wx-box") !== -1;
+  styleEl.textContent = ".syn-wx-box { display: none !important; }";
   window._synMetarPNG = true;
   setTimeout(function() {
     synSavePNG();
     setTimeout(function() {
       if (hadSlp) { _synShowSlp = true; _synSlpLayer.addTo(MAP); }
       if (hadHL)  { _synShowHL  = true; _synHLLayer.addTo(MAP);  }
+      if (!hadWxHidden) styleEl.textContent = "";
       window._synMetarPNG = false;
     }, 3000);
   }, 200);
