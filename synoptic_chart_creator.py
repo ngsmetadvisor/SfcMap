@@ -325,8 +325,8 @@ def pressure_tendency_svg(cx, cy, R, tendency, S):
     return ''.join(parts)
 
 
-def station_model_svg(d, S=34):
-    """Full WMO station model SVG."""
+def station_model_svg(d, S=34, wmo_style=False):
+    """Full WMO station model SVG. wmo_style param accepted (no-op here)."""
     PAD = S * 1.2
     W   = S * 3 + PAD * 2
     H   = S * 3 + PAD * 2
