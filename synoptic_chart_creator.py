@@ -2190,7 +2190,6 @@ for _ts in _ts_all:
         if _d['timestamp'] != _ts: continue
         pass  # no geographic filter — use all stations
         _svg, _sw, _sh = station_model_svg(_d, S=SYMBOL_SCALE)
-        _svg_wmo, _, _ = station_model_svg(_d, S=SYMBOL_SCALE, wmo_style=True)
         _fc = flight_cat_color(_d)
         _wg = f' G{_d["wind_gust"]}' if _d.get('wind_gust') else ''
         _pop = (
@@ -2209,7 +2208,7 @@ for _ts in _ts_all:
         )
         _entries.append({
             'lat': _d['lat'], 'lon': _d['lon'],
-            'svg': _svg, 'svg_wmo': _svg_wmo, 'sw': _sw, 'sh': _sh, 'popup': _pop,
+            'svg': _svg, 'sw': _sw, 'sh': _sh, 'popup': _pop,
             'tip': f'{_d["icao"]} {_d["temp"]}C/{_d["dew"]}C {_d["wind_dir"]}/{_d["wind_spd"]}kt'
         })
     _ts_data[_ts] = _entries
@@ -2271,12 +2270,9 @@ ts_js = (
     '  if (_synHLLayer)  { MAP.removeLayer(_synHLLayer);  _synHLLayer  = null; }\n'
     '  _synStnLayer = L.layerGroup();\n'
     '  entries.forEach(function(d) {\n'
-    '    var _useWmo = (_synSvgMode === "wmo");\n'
-    '    var _html = _useWmo ? d.svg_wmo : d.svg;\n'
-    '    var _sz   = _useWmo ? [d.sw*0.85, d.sh*0.85] : [d.sw, d.sh];\n'
     '    L.marker([d.lat, d.lon], {\n'
     '      icon: L.divIcon({\n'
-    '        html: _html, iconSize:_sz, iconAnchor:[_sz[0]/2,_sz[1]/2], className:""\n'
+    '        html: d.svg, iconSize:[d.sw,d.sh], iconAnchor:[d.sw/2,d.sh/2], className:""\n'
     '      }), zIndexOffset:100\n'
     '    }).bindPopup(d.popup,{maxWidth:280,closeButton:true}).bindTooltip(d.tip).addTo(_synStnLayer);\n'
     '  });\n'
@@ -2395,13 +2391,19 @@ ts_js = (
     '  } else if (which === "svg") {\n'
     '    _synSvgMode = (_synSvgMode === "colour") ? "wmo" : "colour";\n'
     '    var btn3 = document.getElementById("btn-svg");\n'
+    '    var styleEl = document.getElementById("syn-wx-style");\n'
+    '    if (!styleEl) {\n'
+    '      styleEl = document.createElement("style");\n'
+    '      styleEl.id = "syn-wx-style";\n'
+    '      document.head.appendChild(styleEl);\n'
+    '    }\n'
     '    if (_synSvgMode === "wmo") {\n'
+    '      styleEl.textContent = ".syn-wx-box { display: none !important; }";\n'
     '      btn3.textContent = "WMO ✓"; btn3.style.background = "#f4e8c8"; btn3.style.color = "#5c2e00"; btn3.style.borderColor = "#9a6a00";\n'
     '    } else {\n'
+    '      styleEl.textContent = "";\n'
     '      btn3.textContent = "Stn ✓"; btn3.style.background = "#e8f0fe"; btn3.style.color = "#1a3a6a"; btn3.style.borderColor = "#aaa";\n'
     '    }\n'
-    '    var _sel = document.getElementById("ts-select");\n'
-    '    if (_sel && _sel.value) synUpdateTS(_sel.value);\n'
     '  }\n'
     '}\n'
     'function synInitDropdown() {\n'
@@ -3296,7 +3298,7 @@ def station_model_svg(d, S=34, wmo_style=False):
                     f'y="{_wx_y - fs * 0.5 - _py:.1f}" '
                     f'width="{_tw + _px * 2:.1f}" '
                     f'height="{fs + _py * 2:.1f}" '
-                    f'rx="2" fill="{_bg}" opacity="{_opacity}"/>'
+                    f'rx="2" fill="{_bg}" opacity="{_opacity}" class="syn-wx-box"/>'
                 )
             parts.append(txt(_wx_x, _wx_y, wx, bold=False))
         if d['dew'] is not None:
@@ -3332,7 +3334,7 @@ def station_model_svg(d, S=34, wmo_style=False):
                 f'y="{_cb_y - fs * 0.5 - _py:.1f}" '
                 f'width="{_tw + _px * 2:.1f}" '
                 f'height="{fs + _py * 2:.1f}" '
-                f'rx="2" fill="{_ceil_color}" opacity="0.82"/>'
+                f'rx="2" fill="{_ceil_color}" opacity="0.82" class="syn-wx-box"/>'
             )
         parts.append(txt(_cb_x, _cb_y, _cb_str, anchor='middle'))
     _name_y = cy + R + fs * 0.9 + fs * 1.2
@@ -3622,7 +3624,6 @@ for _ts in _ts_all:
         if _d['timestamp'] != _ts: continue
         pass  # no geographic filter — use all stations
         _svg, _sw, _sh = station_model_svg(_d, S=SYMBOL_SCALE)
-        _svg_wmo, _, _ = station_model_svg(_d, S=SYMBOL_SCALE, wmo_style=True)
         _fc = flight_cat_color(_d)
         _wg = f' G{_d["wind_gust"]}' if _d.get('wind_gust') else ''
         _pop = (
@@ -3641,7 +3642,7 @@ for _ts in _ts_all:
         )
         _entries.append({
             'lat': _d['lat'], 'lon': _d['lon'],
-            'svg': _svg, 'svg_wmo': _svg_wmo, 'sw': _sw, 'sh': _sh, 'popup': _pop,
+            'svg': _svg, 'sw': _sw, 'sh': _sh, 'popup': _pop,
             'tip': f'{_d["icao"]} {_d["temp"]}C/{_d["dew"]}C {_d["wind_dir"]}/{_d["wind_spd"]}kt'
         })
     _ts_data[_ts] = _entries
@@ -3821,13 +3822,19 @@ ts_js = (
     '  } else if (which === "svg") {\n'
     '    _synSvgMode = (_synSvgMode === "colour") ? "wmo" : "colour";\n'
     '    var btn3 = document.getElementById("btn-svg");\n'
+    '    var styleEl = document.getElementById("syn-wx-style");\n'
+    '    if (!styleEl) {\n'
+    '      styleEl = document.createElement("style");\n'
+    '      styleEl.id = "syn-wx-style";\n'
+    '      document.head.appendChild(styleEl);\n'
+    '    }\n'
     '    if (_synSvgMode === "wmo") {\n'
+    '      styleEl.textContent = ".syn-wx-box { display: none !important; }";\n'
     '      btn3.textContent = "WMO ✓"; btn3.style.background = "#f4e8c8"; btn3.style.color = "#5c2e00"; btn3.style.borderColor = "#9a6a00";\n'
     '    } else {\n'
+    '      styleEl.textContent = "";\n'
     '      btn3.textContent = "Stn ✓"; btn3.style.background = "#e8f0fe"; btn3.style.color = "#1a3a6a"; btn3.style.borderColor = "#aaa";\n'
     '    }\n'
-    '    var _sel = document.getElementById("ts-select");\n'
-    '    if (_sel && _sel.value) synUpdateTS(_sel.value);\n'
     '  }\n'
     '}\n'
     'function synInitDropdown() {\n'
