@@ -4794,4 +4794,6 @@ display(HTML(
     f'</div>'
 ))
 
+
+
 print("\n✓ synoptic_map.html written to output/")
