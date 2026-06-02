@@ -2454,17 +2454,6 @@ m.get_root().html.add_child(Element(borders_js))
 # ---- SAVE PNG BUTTON -----------------------------------------------------
 save_btn_html = (
     '<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>\n'
-    '<div id="syn-save-bar" style="'
-    'position:fixed;bottom:26px;right:10px;z-index:10000;'
-    'background:rgba(255,255,255,0.96);border:1px solid #ccc;border-radius:8px;'
-    'padding:6px 12px;font-family:Courier New,monospace;font-size:12px;'
-    'box-shadow:0 2px 10px rgba(0,0,0,0.15);display:flex;align-items:center;gap:8px;">'
-    '<button id="btn-save-png" onclick="synSavePNG()" '
-    'style="font-size:11px;padding:4px 12px;cursor:pointer;border:1px solid #aaa;'
-    'border-radius:4px;background:#e8f0fe;color:#1a3a6a;font-family:Courier New,monospace;">'
-    '&#128247; Save PNG</button>'
-    '<span id="save-status" style="color:#888;font-size:10px;min-width:80px"></span>'
-    '</div>'
     '<script>\n'
 'function synSavePNG() {\n'
     '  var btn    = document.getElementById("btn-save-png");\n'
@@ -2856,6 +2845,20 @@ function synExport1200Z() {
 function synExportCurrent() {
   setTimeout(synSavePNG, 200);
 }
+function synExportCurrentMetar() {
+  var hadSlp = _synShowSlp, hadHL = _synShowHL;
+  if (hadSlp) { _synShowSlp = false; _synSlpLayer.remove(); }
+  if (hadHL)  { _synShowHL  = false; _synHLLayer.remove();  }
+  window._synMetarPNG = true;
+  setTimeout(function() {
+    synSavePNG();
+    setTimeout(function() {
+      if (hadSlp) { _synShowSlp = true; _synSlpLayer.addTo(MAP); }
+      if (hadHL)  { _synShowHL  = true; _synHLLayer.addTo(MAP);  }
+      window._synMetarPNG = false;
+    }, 3000);
+  }, 200);
+}
 function synExportMetar() {
   var hadSlp = _synShowSlp, hadHL = _synShowHL;
   if (hadSlp) { _synShowSlp = false; _synSlpLayer.remove(); }
@@ -2880,7 +2883,10 @@ function synExportMetar() {
     color:#4a3000;cursor:pointer;font-weight:bold;">&#128225; Export {EXPORT_TIME} METAR PNG</button>
   <button onclick="synExportCurrent()" style="font-family:Courier New,monospace;font-size:12px;
     padding:5px 12px;background:#d4f4c8;border:1px solid #1a6a2a;border-radius:5px;
-    color:#1a3a1a;cursor:pointer;font-weight:bold;">Export Current PNG</button>
+    color:#1a3a1a;cursor:pointer;font-weight:bold;">&#9200; Export Current Timestep PNG</button>
+  <button onclick="synExportCurrentMetar()" style="font-family:Courier New,monospace;font-size:12px;
+    padding:5px 12px;background:#e8f4e8;border:1px solid #2a7a3a;border-radius:5px;
+    color:#1a4a1a;cursor:pointer;font-weight:bold;">&#128225; Export Current Timestep METAR PNG</button>
 </div>'''.replace('{BTN_BG}', _btn_bg).replace('{BTN_BDR}', _btn_bdr).replace('{BTN_CLR}', _btn_clr)
 
 
@@ -3823,17 +3829,6 @@ m.get_root().html.add_child(Element(borders_js))
 # ---- SAVE PNG BUTTON -----------------------------------------------------
 save_btn_html = (
     '<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>\n'
-    '<div id="syn-save-bar" style="'
-    'position:fixed;bottom:26px;right:10px;z-index:10000;'
-    'background:rgba(255,255,255,0.96);border:1px solid #ccc;border-radius:8px;'
-    'padding:6px 12px;font-family:Courier New,monospace;font-size:12px;'
-    'box-shadow:0 2px 10px rgba(0,0,0,0.15);display:flex;align-items:center;gap:8px;">'
-    '<button id="btn-save-png" onclick="synSavePNG()" '
-    'style="font-size:11px;padding:4px 12px;cursor:pointer;border:1px solid #aaa;'
-    'border-radius:4px;background:#e8f0fe;color:#1a3a6a;font-family:Courier New,monospace;">'
-    '&#128247; Save PNG</button>'
-    '<span id="save-status" style="color:#888;font-size:10px;min-width:80px"></span>'
-    '</div>'
     '<script>\n'
 'function synSavePNG() {\n'
     '  var btn    = document.getElementById("btn-save-png");\n'
@@ -4220,6 +4215,20 @@ function synExport1200Z() {
 function synExportCurrent() {
   setTimeout(synSavePNG, 200);
 }
+function synExportCurrentMetar() {
+  var hadSlp = _synShowSlp, hadHL = _synShowHL;
+  if (hadSlp) { _synShowSlp = false; _synSlpLayer.remove(); }
+  if (hadHL)  { _synShowHL  = false; _synHLLayer.remove();  }
+  window._synMetarPNG = true;
+  setTimeout(function() {
+    synSavePNG();
+    setTimeout(function() {
+      if (hadSlp) { _synShowSlp = true; _synSlpLayer.addTo(MAP); }
+      if (hadHL)  { _synShowHL  = true; _synHLLayer.addTo(MAP);  }
+      window._synMetarPNG = false;
+    }, 3000);
+  }, 200);
+}
 function synExportMetar() {
   var hadSlp = _synShowSlp, hadHL = _synShowHL;
   if (hadSlp) { _synShowSlp = false; _synSlpLayer.remove(); }
@@ -4244,7 +4253,10 @@ function synExportMetar() {
     color:#4a3000;cursor:pointer;font-weight:bold;">&#128225; Export {EXPORT_TIME} METAR PNG</button>
   <button onclick="synExportCurrent()" style="font-family:Courier New,monospace;font-size:12px;
     padding:5px 12px;background:#d4f4c8;border:1px solid #1a6a2a;border-radius:5px;
-    color:#1a3a1a;cursor:pointer;font-weight:bold;">Export Current PNG</button>
+    color:#1a3a1a;cursor:pointer;font-weight:bold;">&#9200; Export Current Timestep PNG</button>
+  <button onclick="synExportCurrentMetar()" style="font-family:Courier New,monospace;font-size:12px;
+    padding:5px 12px;background:#e8f4e8;border:1px solid #2a7a3a;border-radius:5px;
+    color:#1a4a1a;cursor:pointer;font-weight:bold;">&#128225; Export Current Timestep METAR PNG</button>
 </div>'''.replace('{BTN_BG}', _btn_bg).replace('{BTN_BDR}', _btn_bdr).replace('{BTN_CLR}', _btn_clr)
 
 
@@ -4524,6 +4536,20 @@ function synExport1200Z() {
 function synExportCurrent() {
   setTimeout(synSavePNG, 200);
 }
+function synExportCurrentMetar() {
+  var hadSlp = _synShowSlp, hadHL = _synShowHL;
+  if (hadSlp) { _synShowSlp = false; _synSlpLayer.remove(); }
+  if (hadHL)  { _synShowHL  = false; _synHLLayer.remove();  }
+  window._synMetarPNG = true;
+  setTimeout(function() {
+    synSavePNG();
+    setTimeout(function() {
+      if (hadSlp) { _synShowSlp = true; _synSlpLayer.addTo(MAP); }
+      if (hadHL)  { _synShowHL  = true; _synHLLayer.addTo(MAP);  }
+      window._synMetarPNG = false;
+    }, 3000);
+  }, 200);
+}
 function synExportMetar() {
   var hadSlp = _synShowSlp, hadHL = _synShowHL;
   if (hadSlp) { _synShowSlp = false; _synSlpLayer.remove(); }
@@ -4548,7 +4574,10 @@ function synExportMetar() {
     color:#4a3000;cursor:pointer;font-weight:bold;">&#128225; Export {EXPORT_TIME} METAR PNG</button>
   <button onclick="synExportCurrent()" style="font-family:Courier New,monospace;font-size:12px;
     padding:5px 12px;background:#d4f4c8;border:1px solid #1a6a2a;border-radius:5px;
-    color:#1a3a1a;cursor:pointer;font-weight:bold;">Export Current PNG</button>
+    color:#1a3a1a;cursor:pointer;font-weight:bold;">&#9200; Export Current Timestep PNG</button>
+  <button onclick="synExportCurrentMetar()" style="font-family:Courier New,monospace;font-size:12px;
+    padding:5px 12px;background:#e8f4e8;border:1px solid #2a7a3a;border-radius:5px;
+    color:#1a4a1a;cursor:pointer;font-weight:bold;">&#128225; Export Current Timestep METAR PNG</button>
 </div>'''.replace('{BTN_BG}', _btn_bg).replace('{BTN_BDR}', _btn_bdr).replace('{BTN_CLR}', _btn_clr)
 
 
@@ -4623,6 +4652,45 @@ display(HTML(
     f'background:#e8e8f8;border:1px solid #4a4a9a;border-radius:5px;'
     f'color:#1a1a6a;cursor:pointer;font-weight:bold;text-decoration:none;">'
     f'&#11015; Download HTML</a>'
+    f'<button onclick="document.getElementById(\'gha-panel\').style.display=(document.getElementById(\'gha-panel\').style.display===\'none\'?\'flex\':\'none\')" '
+    f'style="font-family:Courier New,monospace;font-size:13px;padding:7px 16px;'
+    f'background:#f0e8f8;border:1px solid #6a2a9a;border-radius:5px;'
+    f'color:#3a006a;cursor:pointer;font-weight:bold;">&#9881; Run Script Now</button>'
+    f'<div id="gha-panel" style="display:none;flex-direction:column;gap:6px;padding:8px 12px;'
+    f'background:#faf8ff;border:1px solid #9a6acc;border-radius:6px;font-family:Courier New,monospace;font-size:11px;min-width:320px;">'
+    f'<b style="color:#3a006a;">&#128640; Trigger GitHub Actions</b>'
+    f'<label>GitHub Token (PAT):<input id="gha-token" type="password" placeholder="ghp_..." '
+    f'style="width:100%;font-family:Courier New,monospace;font-size:11px;padding:3px 6px;border:1px solid #ccc;border-radius:3px;margin-top:2px;"/></label>'
+    f'<label>Owner/Repo:<input id="gha-repo" type="text" placeholder="username/repo" '
+    f'style="width:100%;font-family:Courier New,monospace;font-size:11px;padding:3px 6px;border:1px solid #ccc;border-radius:3px;margin-top:2px;"/></label>'
+    f'<label>Workflow filename:<input id="gha-workflow" type="text" placeholder="run.yml" '
+    f'style="width:100%;font-family:Courier New,monospace;font-size:11px;padding:3px 6px;border:1px solid #ccc;border-radius:3px;margin-top:2px;"/></label>'
+    f'<label>Branch:<input id="gha-branch" type="text" value="main" '
+    f'style="width:100%;font-family:Courier New,monospace;font-size:11px;padding:3px 6px;border:1px solid #ccc;border-radius:3px;margin-top:2px;"/></label>'
+    f'<button onclick="synTriggerGHA()" '
+    f'style="padding:5px 14px;background:#7a2acc;border:none;border-radius:4px;color:white;cursor:pointer;font-family:Courier New,monospace;font-size:12px;font-weight:bold;">'
+    f'&#9889; Dispatch Workflow</button>'
+    f'<span id="gha-status" style="color:#555;font-size:10px;"></span>'
+    f'</div>'
+    f'<script>'
+    f'function synTriggerGHA(){{'
+    f'  var tok=document.getElementById("gha-token").value.trim();'
+    f'  var repo=document.getElementById("gha-repo").value.trim();'
+    f'  var wf=document.getElementById("gha-workflow").value.trim();'
+    f'  var br=document.getElementById("gha-branch").value.trim()||"main";'
+    f'  var st=document.getElementById("gha-status");'
+    f'  if(!tok||!repo||!wf){{st.textContent="Fill in all fields.";return;}}'
+    f'  st.textContent="Dispatching...";'
+    f'  fetch("https://api.github.com/repos/"+repo+"/actions/workflows/"+wf+"/dispatches",{{'
+    f'    method:"POST",'
+    f'    headers:{{"Authorization":"Bearer "+tok,"Accept":"application/vnd.github+json","Content-Type":"application/json"}},'
+    f'    body:JSON.stringify({{ref:br}})'
+    f'  }}).then(function(r){{'
+    f'    if(r.status===204){{st.style.color="#1a6a2a";st.textContent="&#10003; Workflow dispatched!";}}'
+    f'    else{{r.text().then(function(t){{st.style.color="#aa2222";st.textContent="Error "+r.status+": "+t.slice(0,120);}});}}'
+    f'  }}).catch(function(e){{st.style.color="#aa2222";st.textContent="Network error: "+e.message;}});'
+    f'}}'
+    f'</script>'
     f'</div>'
     f'<div style="width:100%;height:1800px;border:1px solid #ccc;border-radius:0 0 6px 6px;overflow:hidden;">'
     + _html +
