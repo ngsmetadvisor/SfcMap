@@ -110,7 +110,8 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git pull --rebase origin main
+          git fetch origin main
+          git reset --soft origin/main
           git add docs/
           git diff --cached --quiet ||             git commit -m "chore: synoptic chart ${STAMP} [skip ci]"
-          git push
+          git push origin main
