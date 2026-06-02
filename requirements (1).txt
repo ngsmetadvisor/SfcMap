@@ -1,0 +1,9 @@
+requests
+scipy
+matplotlib
+numpy
+pykrige
+folium
+shapely
+branca
+pandas
