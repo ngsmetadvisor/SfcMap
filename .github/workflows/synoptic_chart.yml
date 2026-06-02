@@ -8,7 +8,7 @@ on:
   schedule:
     - cron: "37  0 * * *"   # 00:37 UTC daily  → 00Z data
     - cron: "37  6 * * *"   # 06:37 UTC daily  → 06Z data
-    - cron: "37 13 * * *"   # 13:37 UTC daily  → 12Z data
+    - cron: "37 12 * * *"   # 13:37 UTC daily  → 12Z data
     - cron: "37 18 * * *"   # 18:37 UTC daily  → 18Z data
 
 jobs:
