@@ -5,7 +5,7 @@
 # METAR source: https://aviationweather.gov/api/data/metar
 
 # ── Cell 1 . Install & import packages ────────────────────────
-import subprocess, sys, importlib
+import subprocess, sys, importlib, importlib.util
 
 # ── Headless shim: replace Colab display utilities ────────────────────────────
 import sys as _sys
