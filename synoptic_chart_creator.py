@@ -133,7 +133,7 @@ if os.path.exists(_FLAG_FILE):
 else:
     print('Auto-export OFF')
 
-_AUTO_EXPORT = True
+_AUTO_EXPORT = False  # auto-download disabled; use the Download HTML button instead
 
 # -- Cell 8 - WMO station model as SVG string ---
 import math
@@ -2911,8 +2911,7 @@ display(HTML(
 
 
 
-if _AUTO_EXPORT:
-    display(HTML('<script>setTimeout(synExport1200Z, 2500);</script>'))
+# auto-export removed — download triggered manually via button in the HTML
 
 # -- Cell 8 - WMO station model as SVG string ---
 import math
@@ -4522,6 +4521,11 @@ print('Saved')
 with open('output/synoptic_map.html', encoding='utf-8') as f:
     _html = f.read()
 
+# Build a data-URI download link so the user can save the HTML file directly.
+_html_b64 = __import__('base64').b64encode(_html.encode('utf-8')).decode()
+_dl_href  = f'data:text/html;base64,{_html_b64}'
+_dl_name  = f'synoptic_map_{EXPORT_TIME}.html'
+
 display(HTML(
     f'<div style="font-family:Courier New,monospace;padding:8px 10px;'
     f'background:#f8f8f8;border:1px solid #ccc;border-radius:6px 6px 0 0;'
@@ -4532,11 +4536,15 @@ display(HTML(
     f'<button onclick="synExportCurrent()" style="font-size:13px;padding:7px 16px;'
     f'background:#d4f4c8;border:1px solid #1a6a2a;border-radius:5px;'
     f'color:#1a3a1a;cursor:pointer;font-weight:bold;">&#128247; Export Current PNG</button>'
+    f'<a href="{_dl_href}" download="{_dl_name}" '
+    f'style="font-family:Courier New,monospace;font-size:13px;padding:7px 16px;'
+    f'background:#e8e8f8;border:1px solid #4a4a9a;border-radius:5px;'
+    f'color:#1a1a6a;cursor:pointer;font-weight:bold;text-decoration:none;">'
+    f'&#11015; Download HTML</a>'
     f'</div>'
     f'<div style="width:100%;height:1800px;border:1px solid #ccc;border-radius:0 0 6px 6px;overflow:hidden;">'
     + _html +
     f'</div>'
-    + (f'<script>setTimeout(synExport1200Z, 2500);</script>' if _AUTO_EXPORT else '')
 ))
 
 print("\n✓ synoptic_map.html written to output/")
