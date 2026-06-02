@@ -2609,14 +2609,15 @@ with open('output/synoptic_map.html', 'r', encoding='utf-8') as f:
 new_fn = '''function synSavePNG() {
   var btn    = document.getElementById("btn-save-png");
   var status = document.getElementById("save-status");
-  if (btn) { btn.disabled = true; btn.textContent = "Capturing..."; }
-  if (status) status.textContent = "";
+  btn.disabled = true;
+  btn.textContent = "Capturing...";
+  status.textContent = "";
 
   var keys = Object.keys(window).filter(function(k){ return k.startsWith("map_"); });
-  if (!keys.length) { if(status) status.textContent="Map not found"; if(btn) btn.disabled=false; return; }
+  if (!keys.length) { status.textContent="Map not found"; btn.disabled=false; return; }
   var MAP   = window[keys[0]];
   var mapEl = document.getElementById(keys[0]) || document.querySelector(".leaflet-container");
-  if (!mapEl) { if(status) status.textContent="Map el not found"; if(btn) btn.disabled=false; return; }
+  if (!mapEl) { status.textContent="Map el not found"; btn.disabled=false; return; }
 
   var hideEls = [
     mapEl.querySelector(".leaflet-control-container"),
@@ -2642,7 +2643,8 @@ new_fn = '''function synSavePNG() {
     mapEl.style.width  = origW;
     mapEl.style.height = origH;
     MAP.invalidateSize();
-    if (btn) { btn.disabled = false; btn.textContent = "Save PNG"; }
+    btn.disabled = false;
+    btn.textContent = "Save PNG";
   }
 
   mapEl.style.width  = TARGET_W + "px";
@@ -2783,12 +2785,13 @@ new_fn = '''function synSavePNG() {
         link.href = out.toDataURL("image/png");
         link.click();
         restore();
-        if (status) { status.textContent = "Saved!"; setTimeout(function(){ status.textContent = ""; }, 3000); }
+        status.textContent = "Saved!";
+        setTimeout(function(){ status.textContent = ""; }, 3000);
 
       }).catch(function(e) {
         hideEls.forEach(function(el, i){ el.style.visibility = prevVis[i]; });
         restore();
-        if (status) status.textContent = "Failed: " + e.message;
+        status.textContent = "Failed: " + e.message;
       });
     }, 300);
   }, 200);
@@ -2812,52 +2815,6 @@ else:
         i += 1
     html = html[:start] + new_fn + html[end:]
     print('synSavePNG replaced')
-
-# ── Strip wx-color rects for METAR exports ────────────────────────────
-import re
-_bw = re.sub(
-    r'\\u003crect [^\\]*?fill=\\u0022#(?!fff|FFF|1a2030|1a4a8a|1a3a6a)[0-9a-fA-F]{6}\\u0022[^\\]*?/\\u003e',
-    '',
-    _ts_json_str
-)
-html = html.replace(
-    'var _SYN_TS_DATA = ',
-    'var _SYN_TS_DATA_BW = ' + _bw + ';\nvar _SYN_TS_DATA = '
-)
-print('B&W station data injected')
-
-# ── Patch synExportMetar to swap in B&W data ──────────────────────────
-html = html.replace(
-    'function synExportMetar() {\n  var hadSlp = _synShowSlp, hadHL = _synShowHL;',
-    'function synExportMetar() {\n'
-    '  var _origData = _SYN_TS_DATA;\n'
-    '  _SYN_TS_DATA = _SYN_TS_DATA_BW;\n'
-    '  var _cur = document.getElementById("ts-select").value;\n'
-    '  synUpdateTS(_cur);\n'
-    '  var hadSlp = _synShowSlp, hadHL = _synShowHL;'
-)
-html = html.replace(
-    'function synExportCurrentMetar() {\n  var hadSlp = _synShowSlp, hadHL = _synShowHL;',
-    'function synExportCurrentMetar() {\n'
-    '  var _origData = _SYN_TS_DATA;\n'
-    '  _SYN_TS_DATA = _SYN_TS_DATA_BW;\n'
-    '  var _cur = document.getElementById("ts-select").value;\n'
-    '  synUpdateTS(_cur);\n'
-    '  var hadSlp = _synShowSlp, hadHL = _synShowHL;'
-)
-html = html.replace(
-    '      window._synMetarPNG = false;\n    }, 3000);\n  }, 200);\n}\nfunction synExportCurrentMetar',
-    '      _SYN_TS_DATA = _origData;\n'
-    '      window._synMetarPNG = false;\n    }, 3000);\n  }, 200);\n}\nfunction synExportCurrentMetar'
-)
-html = html.replace(
-    '      window._synMetarPNG = false;\n    }, 3000);\n  }, 200);\n}\n</script>',
-    '      _SYN_TS_DATA = _origData;\n'
-    '      window._synMetarPNG = false;\n    }, 3000);\n  }, 200);\n}\n</script>'
-)
-print('METAR B&W swap patched')
-
-
 
 # ── Hide contours and H/L ─────────────────────────────────────────────
 html = html.replace('var _synShowSlp = true;', 'var _synShowSlp = false;')
@@ -2894,32 +2851,310 @@ function synExportCurrent() {
   setTimeout(synSavePNG, 200);
 }
 function synExportCurrentMetar() {
-  var hadSlp = _synShowSlp, hadHL = _synShowHL;
-  if (hadSlp) { _synShowSlp = false; _synSlpLayer.remove(); }
-  if (hadHL)  { _synShowHL  = false; _synHLLayer.remove();  }
-  window._synMetarPNG = true;
-  setTimeout(function() {
-    synSavePNG();
-    setTimeout(function() {
-      if (hadSlp) { _synShowSlp = true; _synSlpLayer.addTo(MAP); }
-      if (hadHL)  { _synShowHL  = true; _synHLLayer.addTo(MAP);  }
-      window._synMetarPNG = false;
-    }, 3000);
+  _synSaveMetarPNG(true);
+}
+// ── Cell-8 station model renderer ─────────────────────────────────────────
+var _FEATHER_SIDE  = 1;
+var _FEATHER_ANGLE = 110;
+var _CR            = 0.14;
+
+function _cloudCircleSVG(cx, cy, R, oktas) {
+  var lw = Math.max(0.9, R * 0.13);
+  var s = '';
+  if (oktas === 9) {
+    s += '<circle cx="'+cx+'" cy="'+cy+'" r="'+R+'" fill="black" stroke="black" stroke-width="'+lw+'"/>';
+    s += '<line x1="'+(cx-R*.55)+'" y1="'+(cy-R*.55)+'" x2="'+(cx+R*.55)+'" y2="'+(cy+R*.55)+'" stroke="white" stroke-width="'+(lw*.85)+'"/>';
+    s += '<line x1="'+(cx+R*.55)+'" y1="'+(cy-R*.55)+'" x2="'+(cx-R*.55)+'" y2="'+(cy+R*.55)+'" stroke="white" stroke-width="'+(lw*.85)+'"/>';
+    return s;
+  }
+  s += '<circle cx="'+cx+'" cy="'+cy+'" r="'+R+'" fill="white" stroke="black" stroke-width="'+lw+'"/>';
+  if (oktas <= 0) return s;
+  if (oktas >= 8) {
+    return '<circle cx="'+cx+'" cy="'+cy+'" r="'+R+'" fill="black" stroke="black" stroke-width="'+lw+'"/>';
+  }
+  if (oktas === 2)
+    s += '<path d="M'+cx+','+cy+' L'+cx+','+(cy-R)+' A'+R+','+R+' 0 0,1 '+(cx+R)+','+cy+' Z" fill="black"/>';
+  else if (oktas === 4)
+    s += '<path d="M'+cx+','+cy+' L'+cx+','+(cy-R)+' A'+R+','+R+' 0 1,1 '+cx+','+(cy+R)+' Z" fill="black"/>';
+  else if (oktas === 6) {
+    s += '<circle cx="'+cx+'" cy="'+cy+'" r="'+R+'" fill="black" stroke="black" stroke-width="'+lw+'"/>';
+    s += '<path d="M'+cx+','+cy+' L'+(cx-R)+','+cy+' A'+R+','+R+' 0 0,1 '+cx+','+(cy-R)+' Z" fill="white"/>';
+  }
+  s += '<circle cx="'+cx+'" cy="'+cy+'" r="'+R+'" fill="none" stroke="black" stroke-width="'+lw+'"/>';
+  return s;
+}
+
+function _windBarbSVG(cx, cy, R, dir, spd, S) {
+  if (dir === null || dir === undefined || spd === null || spd === undefined) return '';
+  if (spd < 3) return '<circle cx="'+cx+'" cy="'+cy+'" r="'+(R*1.5)+'" fill="none" stroke="black" stroke-width="1"/>';
+  var sl = S * 1.0, blen = S * 0.30, blenP = S * 0.45, bspc = S * 0.115;
+  var lw = Math.max(0.9, S * 0.038);
+  var baseY = -R, tipY = -(R + sl);
+  var fxFull = _FEATHER_SIDE * blen, fxHalf = _FEATHER_SIDE * blen * 0.5;
+  var tilt = Math.tan((_FEATHER_ANGLE - 90) * Math.PI / 180) * blen;
+  var rounded = Math.round(spd / 5) * 5;
+  var pn = Math.floor(rounded / 50); rounded -= pn * 50;
+  var fu = Math.floor(rounded / 10); rounded -= fu * 10;
+  var ha = Math.floor(rounded / 5);
+  var p = '<line x1="0" y1="'+baseY+'" x2="0" y2="'+tipY+'" stroke="black" stroke-width="'+lw+'" stroke-linecap="round"/>';
+  var pos = 0;
+  if (pn === 0 && fu === 0 && ha === 1) {
+    var hy = tipY + 0.28 * sl;
+    p += '<line x1="0" y1="'+hy+'" x2="'+fxHalf+'" y2="'+(hy - tilt*0.5)+'" stroke="black" stroke-width="'+lw+'" stroke-linecap="round"/>';
+  } else {
+    for (var i=0;i<pn;i++) {
+      var ay=tipY+pos, by2=tipY+pos+bspc*2;
+      p += '<polygon points="0,'+ay+' '+fxFull+','+(ay-tilt)+' 0,'+by2+'" fill="black"/>';
+      pos += bspc*1.5;
+    }
+    for (var i=0;i<fu;i++) {
+      var fy=tipY+pos;
+      p += '<line x1="0" y1="'+fy+'" x2="'+fxFull+'" y2="'+(fy-tilt)+'" stroke="black" stroke-width="'+lw+'" stroke-linecap="round"/>';
+      pos += bspc;
+    }
+    for (var i=0;i<ha;i++) {
+      var hy=tipY+pos;
+      p += '<line x1="0" y1="'+hy+'" x2="'+fxHalf+'" y2="'+(hy-tilt*0.5)+'" stroke="black" stroke-width="'+lw+'" stroke-linecap="round"/>';
+      pos += bspc;
+    }
+  }
+  return '<g transform="translate('+cx+','+cy+') rotate('+dir+')">'+p+'</g>';
+}
+
+function _tendencySVG(cx, cy, R, tendency, pressureChange, S) {
+  var map = {rising:2,falling:7,steady:4,rising_falling:0,falling_rising:5,rising_steady:1,falling_steady:6};
+  var code = (typeof tendency === 'string') ? (map[tendency.toLowerCase()] !== undefined ? map[tendency.toLowerCase()] : null) : tendency;
+  if (code === null || code === undefined) return '';
+  var lw  = Math.max(0.9, S * 0.042);
+  var off = cx + R + S * 0.09 + S * 0.52;
+  var slpY = cy - R * 0.6 - 7;
+  var oy  = slpY + S * 0.55;
+  var arm = S * 0.22, rise = S * 0.20;
+  function ln(x1,y1,x2,y2){return '<line x1="'+(off+x1)+'" y1="'+(oy+y1)+'" x2="'+(off+x2)+'" y2="'+(oy+y2)+'" stroke="black" stroke-width="'+lw+'" stroke-linecap="round" stroke-linejoin="round"/>';}
+  var parts = '';
+  if (code===2) parts=ln(-arm,rise*.5,arm,-rise*.5);
+  else if(code===7) parts=ln(-arm,-rise*.5,arm,rise*.5);
+  else if(code===4) parts=ln(-arm,0,arm,0);
+  else if(code===0){parts=ln(-arm,rise*.5,0,-rise*.5)+ln(0,-rise*.5,arm,rise*.5);}
+  else if(code===5){parts=ln(-arm,-rise*.5,0,rise*.5)+ln(0,rise*.5,arm,-rise*.5);}
+  else if(code===1){parts=ln(-arm,rise*.5,0,-rise*.5)+ln(0,-rise*.5,arm,-rise*.5);}
+  else if(code===6){parts=ln(-arm,-rise*.5,0,rise*.5)+ln(0,rise*.5,arm,rise*.5);}
+  return parts;
+}
+
+function _stationModelSVG(d, S) {
+  S = S || 34;
+  var PAD = S*1.2, W = S*3+PAD*2, H = S*3+PAD*2;
+  var cx = W/2, cy = H/2, R = S*_CR;
+  var fs = Math.max(7, Math.round(S*0.36));
+  var off = R + S*0.09;
+  var parts = '';
+  var hasSky = d.has_sky_obs;
+  if (hasSky) {
+    parts += _cloudCircleSVG(cx, cy, R, d.oktas);
+  } else {
+    var th=R*1.6;
+    parts += '<polygon points="'+cx+','+(cy-th)+' '+(cx-th)+','+(cy+th*0.65)+' '+(cx+th)+','+(cy+th*0.65)+'" fill="black" stroke="none"/>';
+  }
+  parts += _windBarbSVG(cx, cy, R, d.wind_dir, d.wind_spd, S);
+  function txt(x,y,t,anchor,bold,size){
+    var sz=size||fs, fw=bold?'bold':'normal';
+    return '<text x="'+x+'" y="'+y+'" text-anchor="'+(anchor||'end')+'" dominant-baseline="central" font-size="'+sz+'px" font-weight="'+fw+'" font-family="Courier New,monospace" fill="black" paint-order="stroke" stroke="white" stroke-width="2" stroke-linejoin="round">'+t+'</text>';
+  }
+  if (d.temp !== null && d.temp !== undefined) parts += txt(cx-off, cy-R*0.6-6, String(d.temp));
+  var vs = (d.vis !== null && d.vis !== undefined) ? (d.vis%1===0?String(Math.round(d.vis)):d.vis.toFixed(1)) : null;
+  var wx = [vs, d.weather||null].filter(Boolean).join(' ');
+  if (wx) parts += txt(cx-off-4, cy, wx);
+  if (d.dew !== null && d.dew !== undefined) parts += txt(cx-off, cy+R*0.6+6, String(d.dew));
+  if (d.slp_label) parts += txt(cx+off, cy-R*0.6-7, d.slp_label, 'start');
+  var tendency=d.tendency, pressureChange=d.pressure_change;
+  if (tendency !== null && tendency !== undefined) {
+    var tendY = cy-R*0.6-7+S*0.55;
+    var isNotSteady = tendency !== 'steady';
+    if (isNotSteady && pressureChange !== null && pressureChange !== undefined) {
+      var pcStr = (pressureChange>0?'+':pressureChange<0?'-':'') + Math.abs(pressureChange);
+      parts += txt(cx+off, tendY, pcStr, 'start');
+      parts += _tendencySVG(cx+off, cy, R, tendency, pressureChange, S);
+    } else {
+      parts += _tendencySVG(cx+off-S*0.52, cy, R, tendency, pressureChange, S);
+    }
+  }
+  if (d.lowest_sig && d.lowest_sig.height <= 120) {
+    var cb = Math.ceil(d.lowest_sig.height / 10);
+    parts += txt(cx, cy+R+fs*0.9, String(cb), 'middle');
+  }
+  parts += txt(cx, cy+R+fs*0.9+fs*1.2, d.icao.slice(-3), 'middle');
+  return '<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">'+parts+'</svg>';
+}
+
+function _renderMetarOverlay(canvas, MAP, TARGET_W, TARGET_H, SC) {
+  // Collect all station data from the Leaflet layer
+  var ctx = canvas.getContext('2d');
+  var S = 28; // symbol size in canvas pixels (×2 for scale=2 capture)
+  var drawn = {};
+  // Walk _synStnLayer markers to get lat/lon and data
+  if (typeof _synStnLayer === 'undefined') return;
+  _synStnLayer.eachLayer(function(layer) {
+    var d = layer._synData;
+    if (!d) return;
+    var ll = layer.getLatLng ? layer.getLatLng() : null;
+    if (!ll) return;
+    var pt = MAP.latLngToContainerPoint(ll);
+    var px = pt.x * SC, py = pt.y * SC;
+    if (px < 0 || py < 0 || px > canvas.width || py > canvas.height) return;
+    var key = d.icao;
+    if (drawn[key]) return;
+    drawn[key] = true;
+    var svgStr = _stationModelSVG(d, S);
+    var blob = new Blob([svgStr], {type:'image/svg+xml'});
+    var url = URL.createObjectURL(blob);
+    var img = new Image();
+    img.onload = function() {
+      ctx.drawImage(img, px - img.width/2, py - img.height/2);
+      URL.revokeObjectURL(url);
+    };
+    img.src = url;
+  });
+}
+
+function _synSaveMetarPNG(forceTimestamp) {
+  var btn    = document.getElementById("btn-save-png");
+  var status = document.getElementById("save-status");
+  if(btn){btn.disabled=true; btn.textContent="Capturing...";}
+  if(status) status.textContent="";
+
+  var keys = Object.keys(window).filter(function(k){ return k.startsWith("map_"); });
+  if (!keys.length) { if(status)status.textContent="Map not found"; if(btn){btn.disabled=false;} return; }
+  var MAP   = window[keys[0]];
+  var mapEl = document.getElementById(keys[0]) || document.querySelector(".leaflet-container");
+  if (!mapEl) { if(status)status.textContent="Map el not found"; if(btn){btn.disabled=false;} return; }
+
+  var hideEls = [
+    mapEl.querySelector(".leaflet-control-container"),
+    document.querySelector(".leaflet-control-layers"),
+    document.querySelector(".leaflet-control-zoom"),
+    document.querySelector(".leaflet-control-attribution"),
+    document.getElementById("syn-ts-bar"),
+    document.getElementById("syn-save-bar"),
+    document.getElementById("syn-fs-btn")
+  ].filter(Boolean);
+  // Also hide existing station marker layer during capture (we'll redraw)
+  var stnCanvas = mapEl.querySelectorAll('.leaflet-marker-pane, .leaflet-overlay-pane');
+  var prevVis = hideEls.map(function(el){ return el.style.visibility; });
+  hideEls.forEach(function(el){ el.style.visibility="hidden"; });
+
+  var CENTER=[55,-102], ZOOM=5, TARGET_W=1400, TARGET_H=1100, SC=2;
+  var origW=mapEl.style.width, origH=mapEl.style.height;
+  function restore(){
+    mapEl.style.width=origW; mapEl.style.height=origH;
+    MAP.invalidateSize();
+    if(btn){btn.disabled=false; btn.textContent="Save PNG";}
+  }
+  mapEl.style.width=TARGET_W+"px"; mapEl.style.height=TARGET_H+"px";
+  MAP.invalidateSize();
+
+  setTimeout(function(){
+    MAP.setView(CENTER, ZOOM, {animate:false});
+    setTimeout(function(){
+      html2canvas(mapEl,{useCORS:true,allowTaint:true,scale:SC,logging:false,width:TARGET_W,height:TARGET_H})
+      .then(function(canvas){
+        hideEls.forEach(function(el,i){ el.style.visibility=prevVis[i]; });
+
+        var cropH=canvas.height, cropW=Math.min(Math.round(cropH*8.5/11.0),canvas.width);
+        var out=document.createElement("canvas"); out.width=cropW; out.height=cropH;
+        var ctx2=out.getContext("2d");
+        ctx2.drawImage(canvas,0,0,cropW,cropH,0,0,cropW,cropH);
+
+        // ── Overlay Cell-8 station models ─────────────────────────────
+        var stnPromises = [];
+        if (typeof _synStnLayer !== 'undefined') {
+          var S_sym = 30;
+          _synStnLayer.eachLayer(function(layer){
+            var d = layer._synData; if(!d) return;
+            var ll = layer.getLatLng ? layer.getLatLng() : null; if(!ll) return;
+            var pt = MAP.latLngToContainerPoint(ll);
+            var px=pt.x*SC, py=pt.y*SC;
+            if(px<-100||py<-100||px>cropW+100||py>cropH+100) return;
+            var svgStr=_stationModelSVG(d, S_sym);
+            var blob=new Blob([svgStr],{type:'image/svg+xml'});
+            var url=URL.createObjectURL(blob);
+            stnPromises.push(new Promise(function(resolve){
+              var img=new Image();
+              img.onload=function(){ ctx2.drawImage(img,px-img.width/2,py-img.height/2); URL.revokeObjectURL(url); resolve(); };
+              img.onerror=function(){ URL.revokeObjectURL(url); resolve(); };
+              img.src=url;
+            }));
+          });
+        }
+
+        Promise.all(stnPromises).then(function(){
+          var MARGIN=36;
+          ctx2.fillStyle="rgba(255,255,255,1.0)";
+          ctx2.fillRect(0,0,cropW,MARGIN); ctx2.fillRect(0,cropH-MARGIN,cropW,MARGIN);
+          ctx2.fillRect(0,0,MARGIN,cropH); ctx2.fillRect(cropW-MARGIN,0,MARGIN,cropH);
+
+          var today=new Date();
+          var months=["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+          var dows=["SUNDAY","MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY","SATURDAY"];
+          var dowStr=dows[today.getUTCDay()];
+          var dateStr=months[today.getUTCMonth()]+" "+String(today.getUTCDate()).padStart(2,"0")+" "+today.getUTCFullYear();
+          var selEl=document.getElementById("ts-select");
+          var tsVal=selEl?selEl.value:"";
+          var timeStr=tsVal?tsVal.slice(2):"1200Z";
+          var lines=["SURFACE METAR MAP",dowStr+" "+dateStr,timeStr];
+          var fSize=36,pad=24,lineH=fSize*1.3;
+          var boxH=lines.length*lineH+pad*2;
+          ctx2.font=fSize+"px Arial, sans-serif";
+          var maxW=Math.max.apply(null,lines.map(function(l){return ctx2.measureText(l).width;}));
+          var boxW=maxW+pad*2, bx=MARGIN, by=cropH-MARGIN-boxH;
+          ctx2.fillStyle="rgba(255,255,255,0.88)"; ctx2.fillRect(bx,by,boxW,boxH);
+          ctx2.strokeStyle="#1a4a8a"; ctx2.lineWidth=3; ctx2.strokeRect(bx,by,boxW,boxH);
+          ctx2.fillStyle="#1a2030"; ctx2.textBaseline="top"; ctx2.textAlign="center";
+          var centerX=bx+boxW/2;
+          lines.forEach(function(line,i){ ctx2.font=fSize+"px Arial, sans-serif"; ctx2.fillText(line,centerX,by+pad+i*lineH); });
+
+          ctx2.strokeStyle="#1a2030"; ctx2.lineWidth=2;
+          ctx2.strokeRect(MARGIN,MARGIN,cropW-MARGIN*2,cropH-MARGIN*2);
+
+          var tlLL=MAP.containerPointToLatLng([MARGIN/SC,MARGIN/SC]);
+          var trLL=MAP.containerPointToLatLng([TARGET_W-MARGIN/SC,MARGIN/SC]);
+          var blLL=MAP.containerPointToLatLng([MARGIN/SC,TARGET_H-MARGIN/SC]);
+          var brLL=MAP.containerPointToLatLng([TARGET_W-MARGIN/SC,TARGET_H-MARGIN/SC]);
+          function fmtLat(v){return Math.abs(v).toFixed(1)+(v>=0?"°N":"°S");}
+          function fmtLon(v){return Math.abs(v).toFixed(1)+(v>=0?"°E":"°W");}
+          ctx2.font="18px Arial, sans-serif"; ctx2.fillStyle="#1a2030"; ctx2.textBaseline="middle";
+          var LAT_PAD=30;
+          [{ll:tlLL,x:MARGIN/2,y:MARGIN+LAT_PAD,r:-Math.PI/2},{ll:blLL,x:MARGIN/2,y:cropH-MARGIN-LAT_PAD,r:-Math.PI/2},
+           {ll:trLL,x:cropW-MARGIN/2,y:MARGIN+LAT_PAD,r:Math.PI/2},{ll:brLL,x:cropW-MARGIN/2,y:cropH-MARGIN-LAT_PAD,r:Math.PI/2}
+          ].forEach(function(p){ctx2.save();ctx2.translate(p.x,p.y);ctx2.rotate(p.r);ctx2.textAlign="center";ctx2.fillText(fmtLat(p.ll.lat),0,0);ctx2.restore();});
+          var LON_PAD=15;
+          ctx2.textAlign="left"; ctx2.fillText(fmtLon(tlLL.lng),MARGIN+LON_PAD,MARGIN/2); ctx2.fillText(fmtLon(blLL.lng),MARGIN+LON_PAD,cropH-MARGIN/2);
+          ctx2.textAlign="right"; ctx2.fillText(fmtLon(trLL.lng),cropW-MARGIN-LON_PAD,MARGIN/2); ctx2.fillText(fmtLon(brLL.lng),cropW-MARGIN-LON_PAD,cropH-MARGIN/2);
+
+          var expNow=new Date();
+          var expStr="Exported at: "+expNow.getUTCFullYear()+"/"+String(expNow.getUTCMonth()+1).padStart(2,"0")+"/"+String(expNow.getUTCDate()).padStart(2,"0")+" "+String(expNow.getUTCHours()).padStart(2,"0")+":"+String(expNow.getUTCMinutes()).padStart(2,"0")+":"+String(expNow.getUTCSeconds()).padStart(2,"0")+"Z";
+          ctx2.font="8px Arial, sans-serif"; ctx2.fillStyle="#555555"; ctx2.textBaseline="middle"; ctx2.textAlign="right";
+          var lonLabelWidth=ctx2.measureText(fmtLon(brLL.lng)).width;
+          ctx2.fillText(expStr,cropW-MARGIN-LON_PAD-lonLabelWidth-60,cropH-MARGIN/2);
+
+          var now=new Date(), yyyy=now.getUTCFullYear(), mm=String(now.getUTCMonth()+1).padStart(2,"0"), dd=String(now.getUTCDate()).padStart(2,"0");
+          var selEl2=document.getElementById("ts-select"), tsVal2=selEl2?selEl2.value:"";
+          var tsStripped=tsVal2.replace(/Z$/i,"");
+          var hh=tsStripped.length>=4?tsStripped.slice(-4,-2):"12";
+          var name="surface_metar_"+yyyy+mm+dd+hh+"Z.png";
+          var link=document.createElement("a"); link.download=name; link.href=out.toDataURL("image/png"); link.click();
+          restore(); if(status){status.textContent="Saved!"; setTimeout(function(){status.textContent="";},3000);}
+        });
+      }).catch(function(e){
+        hideEls.forEach(function(el,i){ el.style.visibility=prevVis[i]; });
+        restore(); if(status) status.textContent="Failed: "+e.message;
+      });
+    }, 300);
   }, 200);
 }
+
 function synExportMetar() {
-  var hadSlp = _synShowSlp, hadHL = _synShowHL;
-  if (hadSlp) { _synShowSlp = false; _synSlpLayer.remove(); }
-  if (hadHL)  { _synShowHL  = false; _synHLLayer.remove();  }
-  window._synMetarPNG = true;
-  setTimeout(function() {
-    synSavePNG();
-    setTimeout(function() {
-      if (hadSlp) { _synShowSlp = true; _synSlpLayer.addTo(MAP); }
-      if (hadHL)  { _synShowHL  = true; _synHLLayer.addTo(MAP);  }
-      window._synMetarPNG = false;
-    }, 3000);
-  }, 200);
+  _synSaveMetarPNG(false);
 }
 </script>
 <div style="position:fixed;top:10px;right:10px;z-index:10002;display:flex;flex-direction:column;gap:6px;">
@@ -2935,31 +3170,6 @@ function synExportMetar() {
   <button onclick="synExportCurrentMetar()" style="font-family:Courier New,monospace;font-size:12px;
     padding:5px 12px;background:#e8f4e8;border:1px solid #2a7a3a;border-radius:5px;
     color:#1a4a1a;cursor:pointer;font-weight:bold;">&#128225; Export Current Timestep METAR PNG</button>
-  <button onclick="synShowRunPanel()" style="font-family:Courier New,monospace;font-size:12px;
-    padding:5px 12px;background:#f0e8f8;border:1px solid #6a2a9a;border-radius:5px;
-    color:#3a006a;cursor:pointer;font-weight:bold;">&#9881; Run Script Now</button>
-  <div id="gha-panel" style="display:none;flex-direction:row;align-items:center;gap:6px;padding:5px 10px;
-    background:#faf8ff;border:1px solid #9a6acc;border-radius:5px;">
-    <span style="color:#555;font-size:11px;font-family:Courier New,monospace;">PIN</span>
-    <input id="gha-pin" type="password" maxlength="4" placeholder="····"
-      onkeydown="if(event.key==='Enter')synTriggerGHA()"
-      style="width:52px;font-family:Courier New,monospace;font-size:12px;padding:3px 5px;
-      border:1px solid #9a6acc;border-radius:3px;text-align:center;"/>
-    <button onclick="synTriggerGHA()" style="padding:3px 10px;background:#7a2acc;border:none;
-      border-radius:3px;color:white;cursor:pointer;font-family:Courier New,monospace;font-size:11px;font-weight:bold;">&#9889; Run</button>
-    <span id="gha-status" style="color:#555;font-size:10px;font-family:Courier New,monospace;"></span>
-  </div>
-  <div id="gha-progress" style="display:none;flex-direction:column;gap:3px;padding:6px 10px;
-    background:#faf8ff;border:1px solid #9a6acc;border-radius:5px;">
-    <div style="display:flex;justify-content:space-between;align-items:center;">
-      <b style="color:#3a006a;font-family:Courier New,monospace;font-size:11px;">&#128640; Workflow Progress</b>
-      <span id="gha-run-status" style="color:#888;font-size:10px;font-family:Courier New,monospace;"></span>
-    </div>
-    <div style="background:#e8e0f0;border-radius:3px;height:6px;overflow:hidden;">
-      <div id="gha-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#7a2acc,#a855f7);border-radius:3px;transition:width 0.6s ease;"></div>
-    </div>
-    <div id="gha-steps" style="display:flex;flex-direction:column;gap:2px;font-family:Courier New,monospace;font-size:10px;"></div>
-  </div>
 </div>'''.replace('{BTN_BG}', _btn_bg).replace('{BTN_BDR}', _btn_bdr).replace('{BTN_CLR}', _btn_clr)
 
 
@@ -4052,14 +4262,15 @@ with open('output/synoptic_map.html', 'r', encoding='utf-8') as f:
 new_fn = '''function synSavePNG() {
   var btn    = document.getElementById("btn-save-png");
   var status = document.getElementById("save-status");
-  if (btn) { btn.disabled = true; btn.textContent = "Capturing..."; }
-  if (status) status.textContent = "";
+  btn.disabled = true;
+  btn.textContent = "Capturing...";
+  status.textContent = "";
 
   var keys = Object.keys(window).filter(function(k){ return k.startsWith("map_"); });
-  if (!keys.length) { if(status) status.textContent="Map not found"; if(btn) btn.disabled=false; return; }
+  if (!keys.length) { status.textContent="Map not found"; btn.disabled=false; return; }
   var MAP   = window[keys[0]];
   var mapEl = document.getElementById(keys[0]) || document.querySelector(".leaflet-container");
-  if (!mapEl) { if(status) status.textContent="Map el not found"; if(btn) btn.disabled=false; return; }
+  if (!mapEl) { status.textContent="Map el not found"; btn.disabled=false; return; }
 
   var hideEls = [
     mapEl.querySelector(".leaflet-control-container"),
@@ -4085,7 +4296,8 @@ new_fn = '''function synSavePNG() {
     mapEl.style.width  = origW;
     mapEl.style.height = origH;
     MAP.invalidateSize();
-    if (btn) { btn.disabled = false; btn.textContent = "Save PNG"; }
+    btn.disabled = false;
+    btn.textContent = "Save PNG";
   }
 
   mapEl.style.width  = TARGET_W + "px";
@@ -4226,12 +4438,13 @@ new_fn = '''function synSavePNG() {
         link.href = out.toDataURL("image/png");
         link.click();
         restore();
-        if (status) { status.textContent = "Saved!"; setTimeout(function(){ status.textContent = ""; }, 3000); }
+        status.textContent = "Saved!";
+        setTimeout(function(){ status.textContent = ""; }, 3000);
 
       }).catch(function(e) {
         hideEls.forEach(function(el, i){ el.style.visibility = prevVis[i]; });
         restore();
-        if (status) status.textContent = "Failed: " + e.message;
+        status.textContent = "Failed: " + e.message;
       });
     }, 300);
   }, 200);
@@ -4291,32 +4504,310 @@ function synExportCurrent() {
   setTimeout(synSavePNG, 200);
 }
 function synExportCurrentMetar() {
-  var hadSlp = _synShowSlp, hadHL = _synShowHL;
-  if (hadSlp) { _synShowSlp = false; _synSlpLayer.remove(); }
-  if (hadHL)  { _synShowHL  = false; _synHLLayer.remove();  }
-  window._synMetarPNG = true;
-  setTimeout(function() {
-    synSavePNG();
-    setTimeout(function() {
-      if (hadSlp) { _synShowSlp = true; _synSlpLayer.addTo(MAP); }
-      if (hadHL)  { _synShowHL  = true; _synHLLayer.addTo(MAP);  }
-      window._synMetarPNG = false;
-    }, 3000);
+  _synSaveMetarPNG(true);
+}
+// ── Cell-8 station model renderer ─────────────────────────────────────────
+var _FEATHER_SIDE  = 1;
+var _FEATHER_ANGLE = 110;
+var _CR            = 0.14;
+
+function _cloudCircleSVG(cx, cy, R, oktas) {
+  var lw = Math.max(0.9, R * 0.13);
+  var s = '';
+  if (oktas === 9) {
+    s += '<circle cx="'+cx+'" cy="'+cy+'" r="'+R+'" fill="black" stroke="black" stroke-width="'+lw+'"/>';
+    s += '<line x1="'+(cx-R*.55)+'" y1="'+(cy-R*.55)+'" x2="'+(cx+R*.55)+'" y2="'+(cy+R*.55)+'" stroke="white" stroke-width="'+(lw*.85)+'"/>';
+    s += '<line x1="'+(cx+R*.55)+'" y1="'+(cy-R*.55)+'" x2="'+(cx-R*.55)+'" y2="'+(cy+R*.55)+'" stroke="white" stroke-width="'+(lw*.85)+'"/>';
+    return s;
+  }
+  s += '<circle cx="'+cx+'" cy="'+cy+'" r="'+R+'" fill="white" stroke="black" stroke-width="'+lw+'"/>';
+  if (oktas <= 0) return s;
+  if (oktas >= 8) {
+    return '<circle cx="'+cx+'" cy="'+cy+'" r="'+R+'" fill="black" stroke="black" stroke-width="'+lw+'"/>';
+  }
+  if (oktas === 2)
+    s += '<path d="M'+cx+','+cy+' L'+cx+','+(cy-R)+' A'+R+','+R+' 0 0,1 '+(cx+R)+','+cy+' Z" fill="black"/>';
+  else if (oktas === 4)
+    s += '<path d="M'+cx+','+cy+' L'+cx+','+(cy-R)+' A'+R+','+R+' 0 1,1 '+cx+','+(cy+R)+' Z" fill="black"/>';
+  else if (oktas === 6) {
+    s += '<circle cx="'+cx+'" cy="'+cy+'" r="'+R+'" fill="black" stroke="black" stroke-width="'+lw+'"/>';
+    s += '<path d="M'+cx+','+cy+' L'+(cx-R)+','+cy+' A'+R+','+R+' 0 0,1 '+cx+','+(cy-R)+' Z" fill="white"/>';
+  }
+  s += '<circle cx="'+cx+'" cy="'+cy+'" r="'+R+'" fill="none" stroke="black" stroke-width="'+lw+'"/>';
+  return s;
+}
+
+function _windBarbSVG(cx, cy, R, dir, spd, S) {
+  if (dir === null || dir === undefined || spd === null || spd === undefined) return '';
+  if (spd < 3) return '<circle cx="'+cx+'" cy="'+cy+'" r="'+(R*1.5)+'" fill="none" stroke="black" stroke-width="1"/>';
+  var sl = S * 1.0, blen = S * 0.30, blenP = S * 0.45, bspc = S * 0.115;
+  var lw = Math.max(0.9, S * 0.038);
+  var baseY = -R, tipY = -(R + sl);
+  var fxFull = _FEATHER_SIDE * blen, fxHalf = _FEATHER_SIDE * blen * 0.5;
+  var tilt = Math.tan((_FEATHER_ANGLE - 90) * Math.PI / 180) * blen;
+  var rounded = Math.round(spd / 5) * 5;
+  var pn = Math.floor(rounded / 50); rounded -= pn * 50;
+  var fu = Math.floor(rounded / 10); rounded -= fu * 10;
+  var ha = Math.floor(rounded / 5);
+  var p = '<line x1="0" y1="'+baseY+'" x2="0" y2="'+tipY+'" stroke="black" stroke-width="'+lw+'" stroke-linecap="round"/>';
+  var pos = 0;
+  if (pn === 0 && fu === 0 && ha === 1) {
+    var hy = tipY + 0.28 * sl;
+    p += '<line x1="0" y1="'+hy+'" x2="'+fxHalf+'" y2="'+(hy - tilt*0.5)+'" stroke="black" stroke-width="'+lw+'" stroke-linecap="round"/>';
+  } else {
+    for (var i=0;i<pn;i++) {
+      var ay=tipY+pos, by2=tipY+pos+bspc*2;
+      p += '<polygon points="0,'+ay+' '+fxFull+','+(ay-tilt)+' 0,'+by2+'" fill="black"/>';
+      pos += bspc*1.5;
+    }
+    for (var i=0;i<fu;i++) {
+      var fy=tipY+pos;
+      p += '<line x1="0" y1="'+fy+'" x2="'+fxFull+'" y2="'+(fy-tilt)+'" stroke="black" stroke-width="'+lw+'" stroke-linecap="round"/>';
+      pos += bspc;
+    }
+    for (var i=0;i<ha;i++) {
+      var hy=tipY+pos;
+      p += '<line x1="0" y1="'+hy+'" x2="'+fxHalf+'" y2="'+(hy-tilt*0.5)+'" stroke="black" stroke-width="'+lw+'" stroke-linecap="round"/>';
+      pos += bspc;
+    }
+  }
+  return '<g transform="translate('+cx+','+cy+') rotate('+dir+')">'+p+'</g>';
+}
+
+function _tendencySVG(cx, cy, R, tendency, pressureChange, S) {
+  var map = {rising:2,falling:7,steady:4,rising_falling:0,falling_rising:5,rising_steady:1,falling_steady:6};
+  var code = (typeof tendency === 'string') ? (map[tendency.toLowerCase()] !== undefined ? map[tendency.toLowerCase()] : null) : tendency;
+  if (code === null || code === undefined) return '';
+  var lw  = Math.max(0.9, S * 0.042);
+  var off = cx + R + S * 0.09 + S * 0.52;
+  var slpY = cy - R * 0.6 - 7;
+  var oy  = slpY + S * 0.55;
+  var arm = S * 0.22, rise = S * 0.20;
+  function ln(x1,y1,x2,y2){return '<line x1="'+(off+x1)+'" y1="'+(oy+y1)+'" x2="'+(off+x2)+'" y2="'+(oy+y2)+'" stroke="black" stroke-width="'+lw+'" stroke-linecap="round" stroke-linejoin="round"/>';}
+  var parts = '';
+  if (code===2) parts=ln(-arm,rise*.5,arm,-rise*.5);
+  else if(code===7) parts=ln(-arm,-rise*.5,arm,rise*.5);
+  else if(code===4) parts=ln(-arm,0,arm,0);
+  else if(code===0){parts=ln(-arm,rise*.5,0,-rise*.5)+ln(0,-rise*.5,arm,rise*.5);}
+  else if(code===5){parts=ln(-arm,-rise*.5,0,rise*.5)+ln(0,rise*.5,arm,-rise*.5);}
+  else if(code===1){parts=ln(-arm,rise*.5,0,-rise*.5)+ln(0,-rise*.5,arm,-rise*.5);}
+  else if(code===6){parts=ln(-arm,-rise*.5,0,rise*.5)+ln(0,rise*.5,arm,rise*.5);}
+  return parts;
+}
+
+function _stationModelSVG(d, S) {
+  S = S || 34;
+  var PAD = S*1.2, W = S*3+PAD*2, H = S*3+PAD*2;
+  var cx = W/2, cy = H/2, R = S*_CR;
+  var fs = Math.max(7, Math.round(S*0.36));
+  var off = R + S*0.09;
+  var parts = '';
+  var hasSky = d.has_sky_obs;
+  if (hasSky) {
+    parts += _cloudCircleSVG(cx, cy, R, d.oktas);
+  } else {
+    var th=R*1.6;
+    parts += '<polygon points="'+cx+','+(cy-th)+' '+(cx-th)+','+(cy+th*0.65)+' '+(cx+th)+','+(cy+th*0.65)+'" fill="black" stroke="none"/>';
+  }
+  parts += _windBarbSVG(cx, cy, R, d.wind_dir, d.wind_spd, S);
+  function txt(x,y,t,anchor,bold,size){
+    var sz=size||fs, fw=bold?'bold':'normal';
+    return '<text x="'+x+'" y="'+y+'" text-anchor="'+(anchor||'end')+'" dominant-baseline="central" font-size="'+sz+'px" font-weight="'+fw+'" font-family="Courier New,monospace" fill="black" paint-order="stroke" stroke="white" stroke-width="2" stroke-linejoin="round">'+t+'</text>';
+  }
+  if (d.temp !== null && d.temp !== undefined) parts += txt(cx-off, cy-R*0.6-6, String(d.temp));
+  var vs = (d.vis !== null && d.vis !== undefined) ? (d.vis%1===0?String(Math.round(d.vis)):d.vis.toFixed(1)) : null;
+  var wx = [vs, d.weather||null].filter(Boolean).join(' ');
+  if (wx) parts += txt(cx-off-4, cy, wx);
+  if (d.dew !== null && d.dew !== undefined) parts += txt(cx-off, cy+R*0.6+6, String(d.dew));
+  if (d.slp_label) parts += txt(cx+off, cy-R*0.6-7, d.slp_label, 'start');
+  var tendency=d.tendency, pressureChange=d.pressure_change;
+  if (tendency !== null && tendency !== undefined) {
+    var tendY = cy-R*0.6-7+S*0.55;
+    var isNotSteady = tendency !== 'steady';
+    if (isNotSteady && pressureChange !== null && pressureChange !== undefined) {
+      var pcStr = (pressureChange>0?'+':pressureChange<0?'-':'') + Math.abs(pressureChange);
+      parts += txt(cx+off, tendY, pcStr, 'start');
+      parts += _tendencySVG(cx+off, cy, R, tendency, pressureChange, S);
+    } else {
+      parts += _tendencySVG(cx+off-S*0.52, cy, R, tendency, pressureChange, S);
+    }
+  }
+  if (d.lowest_sig && d.lowest_sig.height <= 120) {
+    var cb = Math.ceil(d.lowest_sig.height / 10);
+    parts += txt(cx, cy+R+fs*0.9, String(cb), 'middle');
+  }
+  parts += txt(cx, cy+R+fs*0.9+fs*1.2, d.icao.slice(-3), 'middle');
+  return '<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">'+parts+'</svg>';
+}
+
+function _renderMetarOverlay(canvas, MAP, TARGET_W, TARGET_H, SC) {
+  // Collect all station data from the Leaflet layer
+  var ctx = canvas.getContext('2d');
+  var S = 28; // symbol size in canvas pixels (×2 for scale=2 capture)
+  var drawn = {};
+  // Walk _synStnLayer markers to get lat/lon and data
+  if (typeof _synStnLayer === 'undefined') return;
+  _synStnLayer.eachLayer(function(layer) {
+    var d = layer._synData;
+    if (!d) return;
+    var ll = layer.getLatLng ? layer.getLatLng() : null;
+    if (!ll) return;
+    var pt = MAP.latLngToContainerPoint(ll);
+    var px = pt.x * SC, py = pt.y * SC;
+    if (px < 0 || py < 0 || px > canvas.width || py > canvas.height) return;
+    var key = d.icao;
+    if (drawn[key]) return;
+    drawn[key] = true;
+    var svgStr = _stationModelSVG(d, S);
+    var blob = new Blob([svgStr], {type:'image/svg+xml'});
+    var url = URL.createObjectURL(blob);
+    var img = new Image();
+    img.onload = function() {
+      ctx.drawImage(img, px - img.width/2, py - img.height/2);
+      URL.revokeObjectURL(url);
+    };
+    img.src = url;
+  });
+}
+
+function _synSaveMetarPNG(forceTimestamp) {
+  var btn    = document.getElementById("btn-save-png");
+  var status = document.getElementById("save-status");
+  if(btn){btn.disabled=true; btn.textContent="Capturing...";}
+  if(status) status.textContent="";
+
+  var keys = Object.keys(window).filter(function(k){ return k.startsWith("map_"); });
+  if (!keys.length) { if(status)status.textContent="Map not found"; if(btn){btn.disabled=false;} return; }
+  var MAP   = window[keys[0]];
+  var mapEl = document.getElementById(keys[0]) || document.querySelector(".leaflet-container");
+  if (!mapEl) { if(status)status.textContent="Map el not found"; if(btn){btn.disabled=false;} return; }
+
+  var hideEls = [
+    mapEl.querySelector(".leaflet-control-container"),
+    document.querySelector(".leaflet-control-layers"),
+    document.querySelector(".leaflet-control-zoom"),
+    document.querySelector(".leaflet-control-attribution"),
+    document.getElementById("syn-ts-bar"),
+    document.getElementById("syn-save-bar"),
+    document.getElementById("syn-fs-btn")
+  ].filter(Boolean);
+  // Also hide existing station marker layer during capture (we'll redraw)
+  var stnCanvas = mapEl.querySelectorAll('.leaflet-marker-pane, .leaflet-overlay-pane');
+  var prevVis = hideEls.map(function(el){ return el.style.visibility; });
+  hideEls.forEach(function(el){ el.style.visibility="hidden"; });
+
+  var CENTER=[55,-102], ZOOM=5, TARGET_W=1400, TARGET_H=1100, SC=2;
+  var origW=mapEl.style.width, origH=mapEl.style.height;
+  function restore(){
+    mapEl.style.width=origW; mapEl.style.height=origH;
+    MAP.invalidateSize();
+    if(btn){btn.disabled=false; btn.textContent="Save PNG";}
+  }
+  mapEl.style.width=TARGET_W+"px"; mapEl.style.height=TARGET_H+"px";
+  MAP.invalidateSize();
+
+  setTimeout(function(){
+    MAP.setView(CENTER, ZOOM, {animate:false});
+    setTimeout(function(){
+      html2canvas(mapEl,{useCORS:true,allowTaint:true,scale:SC,logging:false,width:TARGET_W,height:TARGET_H})
+      .then(function(canvas){
+        hideEls.forEach(function(el,i){ el.style.visibility=prevVis[i]; });
+
+        var cropH=canvas.height, cropW=Math.min(Math.round(cropH*8.5/11.0),canvas.width);
+        var out=document.createElement("canvas"); out.width=cropW; out.height=cropH;
+        var ctx2=out.getContext("2d");
+        ctx2.drawImage(canvas,0,0,cropW,cropH,0,0,cropW,cropH);
+
+        // ── Overlay Cell-8 station models ─────────────────────────────
+        var stnPromises = [];
+        if (typeof _synStnLayer !== 'undefined') {
+          var S_sym = 30;
+          _synStnLayer.eachLayer(function(layer){
+            var d = layer._synData; if(!d) return;
+            var ll = layer.getLatLng ? layer.getLatLng() : null; if(!ll) return;
+            var pt = MAP.latLngToContainerPoint(ll);
+            var px=pt.x*SC, py=pt.y*SC;
+            if(px<-100||py<-100||px>cropW+100||py>cropH+100) return;
+            var svgStr=_stationModelSVG(d, S_sym);
+            var blob=new Blob([svgStr],{type:'image/svg+xml'});
+            var url=URL.createObjectURL(blob);
+            stnPromises.push(new Promise(function(resolve){
+              var img=new Image();
+              img.onload=function(){ ctx2.drawImage(img,px-img.width/2,py-img.height/2); URL.revokeObjectURL(url); resolve(); };
+              img.onerror=function(){ URL.revokeObjectURL(url); resolve(); };
+              img.src=url;
+            }));
+          });
+        }
+
+        Promise.all(stnPromises).then(function(){
+          var MARGIN=36;
+          ctx2.fillStyle="rgba(255,255,255,1.0)";
+          ctx2.fillRect(0,0,cropW,MARGIN); ctx2.fillRect(0,cropH-MARGIN,cropW,MARGIN);
+          ctx2.fillRect(0,0,MARGIN,cropH); ctx2.fillRect(cropW-MARGIN,0,MARGIN,cropH);
+
+          var today=new Date();
+          var months=["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+          var dows=["SUNDAY","MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY","SATURDAY"];
+          var dowStr=dows[today.getUTCDay()];
+          var dateStr=months[today.getUTCMonth()]+" "+String(today.getUTCDate()).padStart(2,"0")+" "+today.getUTCFullYear();
+          var selEl=document.getElementById("ts-select");
+          var tsVal=selEl?selEl.value:"";
+          var timeStr=tsVal?tsVal.slice(2):"1200Z";
+          var lines=["SURFACE METAR MAP",dowStr+" "+dateStr,timeStr];
+          var fSize=36,pad=24,lineH=fSize*1.3;
+          var boxH=lines.length*lineH+pad*2;
+          ctx2.font=fSize+"px Arial, sans-serif";
+          var maxW=Math.max.apply(null,lines.map(function(l){return ctx2.measureText(l).width;}));
+          var boxW=maxW+pad*2, bx=MARGIN, by=cropH-MARGIN-boxH;
+          ctx2.fillStyle="rgba(255,255,255,0.88)"; ctx2.fillRect(bx,by,boxW,boxH);
+          ctx2.strokeStyle="#1a4a8a"; ctx2.lineWidth=3; ctx2.strokeRect(bx,by,boxW,boxH);
+          ctx2.fillStyle="#1a2030"; ctx2.textBaseline="top"; ctx2.textAlign="center";
+          var centerX=bx+boxW/2;
+          lines.forEach(function(line,i){ ctx2.font=fSize+"px Arial, sans-serif"; ctx2.fillText(line,centerX,by+pad+i*lineH); });
+
+          ctx2.strokeStyle="#1a2030"; ctx2.lineWidth=2;
+          ctx2.strokeRect(MARGIN,MARGIN,cropW-MARGIN*2,cropH-MARGIN*2);
+
+          var tlLL=MAP.containerPointToLatLng([MARGIN/SC,MARGIN/SC]);
+          var trLL=MAP.containerPointToLatLng([TARGET_W-MARGIN/SC,MARGIN/SC]);
+          var blLL=MAP.containerPointToLatLng([MARGIN/SC,TARGET_H-MARGIN/SC]);
+          var brLL=MAP.containerPointToLatLng([TARGET_W-MARGIN/SC,TARGET_H-MARGIN/SC]);
+          function fmtLat(v){return Math.abs(v).toFixed(1)+(v>=0?"°N":"°S");}
+          function fmtLon(v){return Math.abs(v).toFixed(1)+(v>=0?"°E":"°W");}
+          ctx2.font="18px Arial, sans-serif"; ctx2.fillStyle="#1a2030"; ctx2.textBaseline="middle";
+          var LAT_PAD=30;
+          [{ll:tlLL,x:MARGIN/2,y:MARGIN+LAT_PAD,r:-Math.PI/2},{ll:blLL,x:MARGIN/2,y:cropH-MARGIN-LAT_PAD,r:-Math.PI/2},
+           {ll:trLL,x:cropW-MARGIN/2,y:MARGIN+LAT_PAD,r:Math.PI/2},{ll:brLL,x:cropW-MARGIN/2,y:cropH-MARGIN-LAT_PAD,r:Math.PI/2}
+          ].forEach(function(p){ctx2.save();ctx2.translate(p.x,p.y);ctx2.rotate(p.r);ctx2.textAlign="center";ctx2.fillText(fmtLat(p.ll.lat),0,0);ctx2.restore();});
+          var LON_PAD=15;
+          ctx2.textAlign="left"; ctx2.fillText(fmtLon(tlLL.lng),MARGIN+LON_PAD,MARGIN/2); ctx2.fillText(fmtLon(blLL.lng),MARGIN+LON_PAD,cropH-MARGIN/2);
+          ctx2.textAlign="right"; ctx2.fillText(fmtLon(trLL.lng),cropW-MARGIN-LON_PAD,MARGIN/2); ctx2.fillText(fmtLon(brLL.lng),cropW-MARGIN-LON_PAD,cropH-MARGIN/2);
+
+          var expNow=new Date();
+          var expStr="Exported at: "+expNow.getUTCFullYear()+"/"+String(expNow.getUTCMonth()+1).padStart(2,"0")+"/"+String(expNow.getUTCDate()).padStart(2,"0")+" "+String(expNow.getUTCHours()).padStart(2,"0")+":"+String(expNow.getUTCMinutes()).padStart(2,"0")+":"+String(expNow.getUTCSeconds()).padStart(2,"0")+"Z";
+          ctx2.font="8px Arial, sans-serif"; ctx2.fillStyle="#555555"; ctx2.textBaseline="middle"; ctx2.textAlign="right";
+          var lonLabelWidth=ctx2.measureText(fmtLon(brLL.lng)).width;
+          ctx2.fillText(expStr,cropW-MARGIN-LON_PAD-lonLabelWidth-60,cropH-MARGIN/2);
+
+          var now=new Date(), yyyy=now.getUTCFullYear(), mm=String(now.getUTCMonth()+1).padStart(2,"0"), dd=String(now.getUTCDate()).padStart(2,"0");
+          var selEl2=document.getElementById("ts-select"), tsVal2=selEl2?selEl2.value:"";
+          var tsStripped=tsVal2.replace(/Z$/i,"");
+          var hh=tsStripped.length>=4?tsStripped.slice(-4,-2):"12";
+          var name="surface_metar_"+yyyy+mm+dd+hh+"Z.png";
+          var link=document.createElement("a"); link.download=name; link.href=out.toDataURL("image/png"); link.click();
+          restore(); if(status){status.textContent="Saved!"; setTimeout(function(){status.textContent="";},3000);}
+        });
+      }).catch(function(e){
+        hideEls.forEach(function(el,i){ el.style.visibility=prevVis[i]; });
+        restore(); if(status) status.textContent="Failed: "+e.message;
+      });
+    }, 300);
   }, 200);
 }
+
 function synExportMetar() {
-  var hadSlp = _synShowSlp, hadHL = _synShowHL;
-  if (hadSlp) { _synShowSlp = false; _synSlpLayer.remove(); }
-  if (hadHL)  { _synShowHL  = false; _synHLLayer.remove();  }
-  window._synMetarPNG = true;
-  setTimeout(function() {
-    synSavePNG();
-    setTimeout(function() {
-      if (hadSlp) { _synShowSlp = true; _synSlpLayer.addTo(MAP); }
-      if (hadHL)  { _synShowHL  = true; _synHLLayer.addTo(MAP);  }
-      window._synMetarPNG = false;
-    }, 3000);
-  }, 200);
+  _synSaveMetarPNG(false);
 }
 </script>
 <div style="position:fixed;top:10px;right:10px;z-index:10002;display:flex;flex-direction:column;gap:6px;">
@@ -4332,31 +4823,6 @@ function synExportMetar() {
   <button onclick="synExportCurrentMetar()" style="font-family:Courier New,monospace;font-size:12px;
     padding:5px 12px;background:#e8f4e8;border:1px solid #2a7a3a;border-radius:5px;
     color:#1a4a1a;cursor:pointer;font-weight:bold;">&#128225; Export Current Timestep METAR PNG</button>
-  <button onclick="synShowRunPanel()" style="font-family:Courier New,monospace;font-size:12px;
-    padding:5px 12px;background:#f0e8f8;border:1px solid #6a2a9a;border-radius:5px;
-    color:#3a006a;cursor:pointer;font-weight:bold;">&#9881; Run Script Now</button>
-  <div id="gha-panel" style="display:none;flex-direction:row;align-items:center;gap:6px;padding:5px 10px;
-    background:#faf8ff;border:1px solid #9a6acc;border-radius:5px;">
-    <span style="color:#555;font-size:11px;font-family:Courier New,monospace;">PIN</span>
-    <input id="gha-pin" type="password" maxlength="4" placeholder="····"
-      onkeydown="if(event.key==='Enter')synTriggerGHA()"
-      style="width:52px;font-family:Courier New,monospace;font-size:12px;padding:3px 5px;
-      border:1px solid #9a6acc;border-radius:3px;text-align:center;"/>
-    <button onclick="synTriggerGHA()" style="padding:3px 10px;background:#7a2acc;border:none;
-      border-radius:3px;color:white;cursor:pointer;font-family:Courier New,monospace;font-size:11px;font-weight:bold;">&#9889; Run</button>
-    <span id="gha-status" style="color:#555;font-size:10px;font-family:Courier New,monospace;"></span>
-  </div>
-  <div id="gha-progress" style="display:none;flex-direction:column;gap:3px;padding:6px 10px;
-    background:#faf8ff;border:1px solid #9a6acc;border-radius:5px;">
-    <div style="display:flex;justify-content:space-between;align-items:center;">
-      <b style="color:#3a006a;font-family:Courier New,monospace;font-size:11px;">&#128640; Workflow Progress</b>
-      <span id="gha-run-status" style="color:#888;font-size:10px;font-family:Courier New,monospace;"></span>
-    </div>
-    <div style="background:#e8e0f0;border-radius:3px;height:6px;overflow:hidden;">
-      <div id="gha-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#7a2acc,#a855f7);border-radius:3px;transition:width 0.6s ease;"></div>
-    </div>
-    <div id="gha-steps" style="display:flex;flex-direction:column;gap:2px;font-family:Courier New,monospace;font-size:10px;"></div>
-  </div>
 </div>'''.replace('{BTN_BG}', _btn_bg).replace('{BTN_BDR}', _btn_bdr).replace('{BTN_CLR}', _btn_clr)
 
 
@@ -4383,14 +4849,15 @@ with open('output/synoptic_map.html', 'r', encoding='utf-8') as f:
 new_fn = '''function synSavePNG() {
   var btn    = document.getElementById("btn-save-png");
   var status = document.getElementById("save-status");
-  if (btn) { btn.disabled = true; btn.textContent = "Capturing..."; }
-  if (status) status.textContent = "";
+  btn.disabled = true;
+  btn.textContent = "Capturing...";
+  status.textContent = "";
 
   var keys = Object.keys(window).filter(function(k){ return k.startsWith("map_"); });
-  if (!keys.length) { if(status) status.textContent="Map not found"; if(btn) btn.disabled=false; return; }
+  if (!keys.length) { status.textContent="Map not found"; btn.disabled=false; return; }
   var MAP   = window[keys[0]];
   var mapEl = document.getElementById(keys[0]) || document.querySelector(".leaflet-container");
-  if (!mapEl) { if(status) status.textContent="Map el not found"; if(btn) btn.disabled=false; return; }
+  if (!mapEl) { status.textContent="Map el not found"; btn.disabled=false; return; }
 
   var hideEls = [
     mapEl.querySelector(".leaflet-control-container"),
@@ -4419,7 +4886,8 @@ new_fn = '''function synSavePNG() {
     mapEl.style.width  = origW;
     mapEl.style.height = origH;
     MAP.invalidateSize();
-    if (btn) { btn.disabled = false; btn.textContent = "Save PNG"; }
+    btn.disabled = false;
+    btn.textContent = "Save PNG";
   }
 
   // Step 1: resize
@@ -4572,12 +5040,13 @@ new_fn = '''function synSavePNG() {
         link.click();
 
         restore();
-        if (status) { status.textContent = "Saved!"; setTimeout(function(){ status.textContent = ""; }, 3000); }
+        status.textContent = "Saved!";
+        setTimeout(function(){ status.textContent = ""; }, 3000);
 
       }).catch(function(e) {
         hideEls.forEach(function(el, i){ el.style.visibility = prevVis[i]; });
         restore();
-        if (status) status.textContent = "Failed: " + e.message;
+        status.textContent = "Failed: " + e.message;
       });
 
     }, 300); // settle after setView
@@ -4639,125 +5108,310 @@ function synExportCurrent() {
   setTimeout(synSavePNG, 200);
 }
 function synExportCurrentMetar() {
-  var hadSlp = _synShowSlp, hadHL = _synShowHL;
-  if (hadSlp) { _synShowSlp = false; _synSlpLayer.remove(); }
-  if (hadHL)  { _synShowHL  = false; _synHLLayer.remove();  }
-  window._synMetarPNG = true;
-  setTimeout(function() {
-    synSavePNG();
-    setTimeout(function() {
-      if (hadSlp) { _synShowSlp = true; _synSlpLayer.addTo(MAP); }
-      if (hadHL)  { _synShowHL  = true; _synHLLayer.addTo(MAP);  }
-      window._synMetarPNG = false;
-    }, 3000);
-  }, 200);
+  _synSaveMetarPNG(true);
 }
-function synExportMetar() {
-  var hadSlp = _synShowSlp, hadHL = _synShowHL;
-  if (hadSlp) { _synShowSlp = false; _synSlpLayer.remove(); }
-  if (hadHL)  { _synShowHL  = false; _synHLLayer.remove();  }
-  window._synMetarPNG = true;
-  setTimeout(function() {
-    synSavePNG();
-    setTimeout(function() {
-      if (hadSlp) { _synShowSlp = true; _synSlpLayer.addTo(MAP); }
-      if (hadHL)  { _synShowHL  = true; _synHLLayer.addTo(MAP);  }
-      window._synMetarPNG = false;
-    }, 3000);
-  }, 200);
+// ── Cell-8 station model renderer ─────────────────────────────────────────
+var _FEATHER_SIDE  = 1;
+var _FEATHER_ANGLE = 110;
+var _CR            = 0.14;
+
+function _cloudCircleSVG(cx, cy, R, oktas) {
+  var lw = Math.max(0.9, R * 0.13);
+  var s = '';
+  if (oktas === 9) {
+    s += '<circle cx="'+cx+'" cy="'+cy+'" r="'+R+'" fill="black" stroke="black" stroke-width="'+lw+'"/>';
+    s += '<line x1="'+(cx-R*.55)+'" y1="'+(cy-R*.55)+'" x2="'+(cx+R*.55)+'" y2="'+(cy+R*.55)+'" stroke="white" stroke-width="'+(lw*.85)+'"/>';
+    s += '<line x1="'+(cx+R*.55)+'" y1="'+(cy-R*.55)+'" x2="'+(cx-R*.55)+'" y2="'+(cy+R*.55)+'" stroke="white" stroke-width="'+(lw*.85)+'"/>';
+    return s;
+  }
+  s += '<circle cx="'+cx+'" cy="'+cy+'" r="'+R+'" fill="white" stroke="black" stroke-width="'+lw+'"/>';
+  if (oktas <= 0) return s;
+  if (oktas >= 8) {
+    return '<circle cx="'+cx+'" cy="'+cy+'" r="'+R+'" fill="black" stroke="black" stroke-width="'+lw+'"/>';
+  }
+  if (oktas === 2)
+    s += '<path d="M'+cx+','+cy+' L'+cx+','+(cy-R)+' A'+R+','+R+' 0 0,1 '+(cx+R)+','+cy+' Z" fill="black"/>';
+  else if (oktas === 4)
+    s += '<path d="M'+cx+','+cy+' L'+cx+','+(cy-R)+' A'+R+','+R+' 0 1,1 '+cx+','+(cy+R)+' Z" fill="black"/>';
+  else if (oktas === 6) {
+    s += '<circle cx="'+cx+'" cy="'+cy+'" r="'+R+'" fill="black" stroke="black" stroke-width="'+lw+'"/>';
+    s += '<path d="M'+cx+','+cy+' L'+(cx-R)+','+cy+' A'+R+','+R+' 0 0,1 '+cx+','+(cy-R)+' Z" fill="white"/>';
+  }
+  s += '<circle cx="'+cx+'" cy="'+cy+'" r="'+R+'" fill="none" stroke="black" stroke-width="'+lw+'"/>';
+  return s;
 }
-var _ghaPollTimer=null; var _ghaRunId=null; var _ghaTok=null;
-var _ghaSteps=[
-  {name:"Checkout repository",       label:"Checkout"},
-  {name:"Set up Python 3.11",        label:"Setup Python"},
-  {name:"Install Python packages",   label:"Install packages"},
-  {name:"Determine export time",     label:"Detect export time"},
-  {name:"Cache station list",        label:"Cache station CSV"},
-  {name:"Generate synoptic_map.html",label:"Generate chart"},
-  {name:"Publish to GitHub Pages",   label:"Publish to Pages"},
-  {name:"Upload chart as artifact",  label:"Upload artifact"},
-  {name:"Commit and push",           label:"Commit & push"}
-];
-function synShowRunPanel() {
-  var p=document.getElementById("gha-panel");
-  p.style.display=p.style.display==="flex"?"none":"flex";
-  if(p.style.display==="flex") setTimeout(function(){document.getElementById("gha-pin").focus();},50);
+
+function _windBarbSVG(cx, cy, R, dir, spd, S) {
+  if (dir === null || dir === undefined || spd === null || spd === undefined) return '';
+  if (spd < 3) return '<circle cx="'+cx+'" cy="'+cy+'" r="'+(R*1.5)+'" fill="none" stroke="black" stroke-width="1"/>';
+  var sl = S * 1.0, blen = S * 0.30, blenP = S * 0.45, bspc = S * 0.115;
+  var lw = Math.max(0.9, S * 0.038);
+  var baseY = -R, tipY = -(R + sl);
+  var fxFull = _FEATHER_SIDE * blen, fxHalf = _FEATHER_SIDE * blen * 0.5;
+  var tilt = Math.tan((_FEATHER_ANGLE - 90) * Math.PI / 180) * blen;
+  var rounded = Math.round(spd / 5) * 5;
+  var pn = Math.floor(rounded / 50); rounded -= pn * 50;
+  var fu = Math.floor(rounded / 10); rounded -= fu * 10;
+  var ha = Math.floor(rounded / 5);
+  var p = '<line x1="0" y1="'+baseY+'" x2="0" y2="'+tipY+'" stroke="black" stroke-width="'+lw+'" stroke-linecap="round"/>';
+  var pos = 0;
+  if (pn === 0 && fu === 0 && ha === 1) {
+    var hy = tipY + 0.28 * sl;
+    p += '<line x1="0" y1="'+hy+'" x2="'+fxHalf+'" y2="'+(hy - tilt*0.5)+'" stroke="black" stroke-width="'+lw+'" stroke-linecap="round"/>';
+  } else {
+    for (var i=0;i<pn;i++) {
+      var ay=tipY+pos, by2=tipY+pos+bspc*2;
+      p += '<polygon points="0,'+ay+' '+fxFull+','+(ay-tilt)+' 0,'+by2+'" fill="black"/>';
+      pos += bspc*1.5;
+    }
+    for (var i=0;i<fu;i++) {
+      var fy=tipY+pos;
+      p += '<line x1="0" y1="'+fy+'" x2="'+fxFull+'" y2="'+(fy-tilt)+'" stroke="black" stroke-width="'+lw+'" stroke-linecap="round"/>';
+      pos += bspc;
+    }
+    for (var i=0;i<ha;i++) {
+      var hy=tipY+pos;
+      p += '<line x1="0" y1="'+hy+'" x2="'+fxHalf+'" y2="'+(hy-tilt*0.5)+'" stroke="black" stroke-width="'+lw+'" stroke-linecap="round"/>';
+      pos += bspc;
+    }
+  }
+  return '<g transform="translate('+cx+','+cy+') rotate('+dir+')">'+p+'</g>';
 }
-function synBuildStepRows() {
-  var c=document.getElementById("gha-steps"); c.innerHTML="";
-  _ghaSteps.forEach(function(s,i) {
-    var row=document.createElement("div");
-    row.style.cssText="display:flex;align-items:center;gap:5px;";
-    row.innerHTML='<span id="gha-si-'+i+'" style="font-size:11px;color:#ccc;">&#9711;</span>'
-      +'<span style="color:#555;flex:1;">'+s.label+'</span>'
-      +'<span id="gha-st-'+i+'" style="color:#aaa;font-size:10px;min-width:55px;text-align:right;"></span>';
-    c.appendChild(row);
+
+function _tendencySVG(cx, cy, R, tendency, pressureChange, S) {
+  var map = {rising:2,falling:7,steady:4,rising_falling:0,falling_rising:5,rising_steady:1,falling_steady:6};
+  var code = (typeof tendency === 'string') ? (map[tendency.toLowerCase()] !== undefined ? map[tendency.toLowerCase()] : null) : tendency;
+  if (code === null || code === undefined) return '';
+  var lw  = Math.max(0.9, S * 0.042);
+  var off = cx + R + S * 0.09 + S * 0.52;
+  var slpY = cy - R * 0.6 - 7;
+  var oy  = slpY + S * 0.55;
+  var arm = S * 0.22, rise = S * 0.20;
+  function ln(x1,y1,x2,y2){return '<line x1="'+(off+x1)+'" y1="'+(oy+y1)+'" x2="'+(off+x2)+'" y2="'+(oy+y2)+'" stroke="black" stroke-width="'+lw+'" stroke-linecap="round" stroke-linejoin="round"/>';}
+  var parts = '';
+  if (code===2) parts=ln(-arm,rise*.5,arm,-rise*.5);
+  else if(code===7) parts=ln(-arm,-rise*.5,arm,rise*.5);
+  else if(code===4) parts=ln(-arm,0,arm,0);
+  else if(code===0){parts=ln(-arm,rise*.5,0,-rise*.5)+ln(0,-rise*.5,arm,rise*.5);}
+  else if(code===5){parts=ln(-arm,-rise*.5,0,rise*.5)+ln(0,rise*.5,arm,-rise*.5);}
+  else if(code===1){parts=ln(-arm,rise*.5,0,-rise*.5)+ln(0,-rise*.5,arm,-rise*.5);}
+  else if(code===6){parts=ln(-arm,-rise*.5,0,rise*.5)+ln(0,rise*.5,arm,rise*.5);}
+  return parts;
+}
+
+function _stationModelSVG(d, S) {
+  S = S || 34;
+  var PAD = S*1.2, W = S*3+PAD*2, H = S*3+PAD*2;
+  var cx = W/2, cy = H/2, R = S*_CR;
+  var fs = Math.max(7, Math.round(S*0.36));
+  var off = R + S*0.09;
+  var parts = '';
+  var hasSky = d.has_sky_obs;
+  if (hasSky) {
+    parts += _cloudCircleSVG(cx, cy, R, d.oktas);
+  } else {
+    var th=R*1.6;
+    parts += '<polygon points="'+cx+','+(cy-th)+' '+(cx-th)+','+(cy+th*0.65)+' '+(cx+th)+','+(cy+th*0.65)+'" fill="black" stroke="none"/>';
+  }
+  parts += _windBarbSVG(cx, cy, R, d.wind_dir, d.wind_spd, S);
+  function txt(x,y,t,anchor,bold,size){
+    var sz=size||fs, fw=bold?'bold':'normal';
+    return '<text x="'+x+'" y="'+y+'" text-anchor="'+(anchor||'end')+'" dominant-baseline="central" font-size="'+sz+'px" font-weight="'+fw+'" font-family="Courier New,monospace" fill="black" paint-order="stroke" stroke="white" stroke-width="2" stroke-linejoin="round">'+t+'</text>';
+  }
+  if (d.temp !== null && d.temp !== undefined) parts += txt(cx-off, cy-R*0.6-6, String(d.temp));
+  var vs = (d.vis !== null && d.vis !== undefined) ? (d.vis%1===0?String(Math.round(d.vis)):d.vis.toFixed(1)) : null;
+  var wx = [vs, d.weather||null].filter(Boolean).join(' ');
+  if (wx) parts += txt(cx-off-4, cy, wx);
+  if (d.dew !== null && d.dew !== undefined) parts += txt(cx-off, cy+R*0.6+6, String(d.dew));
+  if (d.slp_label) parts += txt(cx+off, cy-R*0.6-7, d.slp_label, 'start');
+  var tendency=d.tendency, pressureChange=d.pressure_change;
+  if (tendency !== null && tendency !== undefined) {
+    var tendY = cy-R*0.6-7+S*0.55;
+    var isNotSteady = tendency !== 'steady';
+    if (isNotSteady && pressureChange !== null && pressureChange !== undefined) {
+      var pcStr = (pressureChange>0?'+':pressureChange<0?'-':'') + Math.abs(pressureChange);
+      parts += txt(cx+off, tendY, pcStr, 'start');
+      parts += _tendencySVG(cx+off, cy, R, tendency, pressureChange, S);
+    } else {
+      parts += _tendencySVG(cx+off-S*0.52, cy, R, tendency, pressureChange, S);
+    }
+  }
+  if (d.lowest_sig && d.lowest_sig.height <= 120) {
+    var cb = Math.ceil(d.lowest_sig.height / 10);
+    parts += txt(cx, cy+R+fs*0.9, String(cb), 'middle');
+  }
+  parts += txt(cx, cy+R+fs*0.9+fs*1.2, d.icao.slice(-3), 'middle');
+  return '<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">'+parts+'</svg>';
+}
+
+function _renderMetarOverlay(canvas, MAP, TARGET_W, TARGET_H, SC) {
+  // Collect all station data from the Leaflet layer
+  var ctx = canvas.getContext('2d');
+  var S = 28; // symbol size in canvas pixels (×2 for scale=2 capture)
+  var drawn = {};
+  // Walk _synStnLayer markers to get lat/lon and data
+  if (typeof _synStnLayer === 'undefined') return;
+  _synStnLayer.eachLayer(function(layer) {
+    var d = layer._synData;
+    if (!d) return;
+    var ll = layer.getLatLng ? layer.getLatLng() : null;
+    if (!ll) return;
+    var pt = MAP.latLngToContainerPoint(ll);
+    var px = pt.x * SC, py = pt.y * SC;
+    if (px < 0 || py < 0 || px > canvas.width || py > canvas.height) return;
+    var key = d.icao;
+    if (drawn[key]) return;
+    drawn[key] = true;
+    var svgStr = _stationModelSVG(d, S);
+    var blob = new Blob([svgStr], {type:'image/svg+xml'});
+    var url = URL.createObjectURL(blob);
+    var img = new Image();
+    img.onload = function() {
+      ctx.drawImage(img, px - img.width/2, py - img.height/2);
+      URL.revokeObjectURL(url);
+    };
+    img.src = url;
   });
 }
-function synUpdateStepIcon(i,conclusion,status) {
-  var ic=document.getElementById("gha-si-"+i);
-  var tl=document.getElementById("gha-st-"+i);
-  if(!ic) return;
-  if(conclusion==="success"){ic.innerHTML="&#10003;";ic.style.color="#1a7a2a";}
-  else if(conclusion==="failure"||conclusion==="cancelled"){ic.innerHTML="&#10007;";ic.style.color="#aa2222";}
-  else if(conclusion==="skipped"){ic.innerHTML="&#8212;";ic.style.color="#aaa";}
-  else if(status==="in_progress"){ic.innerHTML="&#9654;";ic.style.color="#7a2acc";}
-  else{ic.innerHTML="&#9711;";ic.style.color="#ccc";}
-  if(tl) tl.textContent=conclusion||(status==="in_progress"?"running":"");
-}
-function synPollRun() {
-  if(!_ghaRunId||!_ghaTok) return;
-  var base="https://api.github.com/repos/ngsmetadvisor/SfcMap";
-  var hdr={Authorization:"Bearer "+_ghaTok,Accept:"application/vnd.github+json"};
-  fetch(base+"/actions/runs/"+_ghaRunId+"/jobs",{headers:hdr})
-  .then(function(r){return r.json();})
-  .then(function(d){
-    var job=(d.jobs||[])[0]; if(!job) return;
-    var rs=document.getElementById("gha-run-status");
-    if(rs) rs.textContent=job.status+(job.conclusion?" \u2192 "+job.conclusion:"");
-    var done=0;
-    _ghaSteps.forEach(function(gs,i){
-      var m=(job.steps||[]).find(function(s){return s.name===gs.name;});
-      if(m){ synUpdateStepIcon(i,m.conclusion,m.status); if(m.conclusion&&m.conclusion!=="skipped") done++; }
-    });
-    var bar=document.getElementById("gha-bar");
-    if(bar) bar.style.width=Math.round((done/_ghaSteps.length)*100)+"%";
-    if(job.status==="completed"){
-      clearInterval(_ghaPollTimer); _ghaPollTimer=null;
-      if(bar&&job.conclusion==="success"){bar.style.width="100%";bar.style.background="linear-gradient(90deg,#1a7a2a,#22c55e)";}
-      else if(bar) bar.style.background="#aa2222";
-      var st=document.getElementById("gha-status");
-      if(st&&job.conclusion==="success"){st.style.color="#1a6a2a";st.textContent="\u2713 Done! Reload to see update.";}
-      else if(st){st.style.color="#aa2222";st.textContent="Workflow "+job.conclusion+".";}
-    }
-  }).catch(function(){});
-}
-function synTriggerGHA() {
-  var pin=document.getElementById("gha-pin").value.trim();
-  var st=document.getElementById("gha-status");
-  if(pin.length!==4){st.style.color="#aa2222";st.textContent="Enter 4-char suffix.";return;}
-  _ghaTok="ghp_5te1jZS2kbyfzeYUANY6CebGtQGpza2j"+pin;
-  st.style.color="#555";st.textContent="Dispatching...";
-  var base="https://api.github.com/repos/ngsmetadvisor/SfcMap";
-  var hdr={Authorization:"Bearer "+_ghaTok,Accept:"application/vnd.github+json","Content-Type":"application/json"};
-  fetch(base+"/actions/workflows/synoptic_chart.yml/dispatches",{
-    method:"POST",headers:hdr,body:JSON.stringify({ref:"main"})
-  }).then(function(r){
-    if(r.status!==204){return r.text().then(function(t){st.style.color="#aa2222";st.textContent="Error "+r.status+": "+t.slice(0,100);_ghaTok=null;});}
-    st.textContent="Queued \u2014 finding run...";
-    document.getElementById("gha-pin").value="";
-    document.getElementById("gha-progress").style.display="flex";
-    synBuildStepRows();
+
+function _synSaveMetarPNG(forceTimestamp) {
+  var btn    = document.getElementById("btn-save-png");
+  var status = document.getElementById("save-status");
+  if(btn){btn.disabled=true; btn.textContent="Capturing...";}
+  if(status) status.textContent="";
+
+  var keys = Object.keys(window).filter(function(k){ return k.startsWith("map_"); });
+  if (!keys.length) { if(status)status.textContent="Map not found"; if(btn){btn.disabled=false;} return; }
+  var MAP   = window[keys[0]];
+  var mapEl = document.getElementById(keys[0]) || document.querySelector(".leaflet-container");
+  if (!mapEl) { if(status)status.textContent="Map el not found"; if(btn){btn.disabled=false;} return; }
+
+  var hideEls = [
+    mapEl.querySelector(".leaflet-control-container"),
+    document.querySelector(".leaflet-control-layers"),
+    document.querySelector(".leaflet-control-zoom"),
+    document.querySelector(".leaflet-control-attribution"),
+    document.getElementById("syn-ts-bar"),
+    document.getElementById("syn-save-bar"),
+    document.getElementById("syn-fs-btn")
+  ].filter(Boolean);
+  // Also hide existing station marker layer during capture (we'll redraw)
+  var stnCanvas = mapEl.querySelectorAll('.leaflet-marker-pane, .leaflet-overlay-pane');
+  var prevVis = hideEls.map(function(el){ return el.style.visibility; });
+  hideEls.forEach(function(el){ el.style.visibility="hidden"; });
+
+  var CENTER=[55,-102], ZOOM=5, TARGET_W=1400, TARGET_H=1100, SC=2;
+  var origW=mapEl.style.width, origH=mapEl.style.height;
+  function restore(){
+    mapEl.style.width=origW; mapEl.style.height=origH;
+    MAP.invalidateSize();
+    if(btn){btn.disabled=false; btn.textContent="Save PNG";}
+  }
+  mapEl.style.width=TARGET_W+"px"; mapEl.style.height=TARGET_H+"px";
+  MAP.invalidateSize();
+
+  setTimeout(function(){
+    MAP.setView(CENTER, ZOOM, {animate:false});
     setTimeout(function(){
-      fetch(base+"/actions/runs?event=workflow_dispatch&per_page=5",{headers:hdr})
-      .then(function(r){return r.json();})
-      .then(function(d){
-        _ghaRunId=(d.workflow_runs||[]).length?(d.workflow_runs[0].id):null;
-        if(_ghaRunId){st.textContent="";_ghaPollTimer=setInterval(synPollRun,5000);synPollRun();}
-        else{st.textContent="Could not find run ID.";}
-      }).catch(function(){});
-    },4000);
-  }).catch(function(e){st.style.color="#aa2222";st.textContent="Network error: "+e.message;_ghaTok=null;});
+      html2canvas(mapEl,{useCORS:true,allowTaint:true,scale:SC,logging:false,width:TARGET_W,height:TARGET_H})
+      .then(function(canvas){
+        hideEls.forEach(function(el,i){ el.style.visibility=prevVis[i]; });
+
+        var cropH=canvas.height, cropW=Math.min(Math.round(cropH*8.5/11.0),canvas.width);
+        var out=document.createElement("canvas"); out.width=cropW; out.height=cropH;
+        var ctx2=out.getContext("2d");
+        ctx2.drawImage(canvas,0,0,cropW,cropH,0,0,cropW,cropH);
+
+        // ── Overlay Cell-8 station models ─────────────────────────────
+        var stnPromises = [];
+        if (typeof _synStnLayer !== 'undefined') {
+          var S_sym = 30;
+          _synStnLayer.eachLayer(function(layer){
+            var d = layer._synData; if(!d) return;
+            var ll = layer.getLatLng ? layer.getLatLng() : null; if(!ll) return;
+            var pt = MAP.latLngToContainerPoint(ll);
+            var px=pt.x*SC, py=pt.y*SC;
+            if(px<-100||py<-100||px>cropW+100||py>cropH+100) return;
+            var svgStr=_stationModelSVG(d, S_sym);
+            var blob=new Blob([svgStr],{type:'image/svg+xml'});
+            var url=URL.createObjectURL(blob);
+            stnPromises.push(new Promise(function(resolve){
+              var img=new Image();
+              img.onload=function(){ ctx2.drawImage(img,px-img.width/2,py-img.height/2); URL.revokeObjectURL(url); resolve(); };
+              img.onerror=function(){ URL.revokeObjectURL(url); resolve(); };
+              img.src=url;
+            }));
+          });
+        }
+
+        Promise.all(stnPromises).then(function(){
+          var MARGIN=36;
+          ctx2.fillStyle="rgba(255,255,255,1.0)";
+          ctx2.fillRect(0,0,cropW,MARGIN); ctx2.fillRect(0,cropH-MARGIN,cropW,MARGIN);
+          ctx2.fillRect(0,0,MARGIN,cropH); ctx2.fillRect(cropW-MARGIN,0,MARGIN,cropH);
+
+          var today=new Date();
+          var months=["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+          var dows=["SUNDAY","MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY","SATURDAY"];
+          var dowStr=dows[today.getUTCDay()];
+          var dateStr=months[today.getUTCMonth()]+" "+String(today.getUTCDate()).padStart(2,"0")+" "+today.getUTCFullYear();
+          var selEl=document.getElementById("ts-select");
+          var tsVal=selEl?selEl.value:"";
+          var timeStr=tsVal?tsVal.slice(2):"1200Z";
+          var lines=["SURFACE METAR MAP",dowStr+" "+dateStr,timeStr];
+          var fSize=36,pad=24,lineH=fSize*1.3;
+          var boxH=lines.length*lineH+pad*2;
+          ctx2.font=fSize+"px Arial, sans-serif";
+          var maxW=Math.max.apply(null,lines.map(function(l){return ctx2.measureText(l).width;}));
+          var boxW=maxW+pad*2, bx=MARGIN, by=cropH-MARGIN-boxH;
+          ctx2.fillStyle="rgba(255,255,255,0.88)"; ctx2.fillRect(bx,by,boxW,boxH);
+          ctx2.strokeStyle="#1a4a8a"; ctx2.lineWidth=3; ctx2.strokeRect(bx,by,boxW,boxH);
+          ctx2.fillStyle="#1a2030"; ctx2.textBaseline="top"; ctx2.textAlign="center";
+          var centerX=bx+boxW/2;
+          lines.forEach(function(line,i){ ctx2.font=fSize+"px Arial, sans-serif"; ctx2.fillText(line,centerX,by+pad+i*lineH); });
+
+          ctx2.strokeStyle="#1a2030"; ctx2.lineWidth=2;
+          ctx2.strokeRect(MARGIN,MARGIN,cropW-MARGIN*2,cropH-MARGIN*2);
+
+          var tlLL=MAP.containerPointToLatLng([MARGIN/SC,MARGIN/SC]);
+          var trLL=MAP.containerPointToLatLng([TARGET_W-MARGIN/SC,MARGIN/SC]);
+          var blLL=MAP.containerPointToLatLng([MARGIN/SC,TARGET_H-MARGIN/SC]);
+          var brLL=MAP.containerPointToLatLng([TARGET_W-MARGIN/SC,TARGET_H-MARGIN/SC]);
+          function fmtLat(v){return Math.abs(v).toFixed(1)+(v>=0?"°N":"°S");}
+          function fmtLon(v){return Math.abs(v).toFixed(1)+(v>=0?"°E":"°W");}
+          ctx2.font="18px Arial, sans-serif"; ctx2.fillStyle="#1a2030"; ctx2.textBaseline="middle";
+          var LAT_PAD=30;
+          [{ll:tlLL,x:MARGIN/2,y:MARGIN+LAT_PAD,r:-Math.PI/2},{ll:blLL,x:MARGIN/2,y:cropH-MARGIN-LAT_PAD,r:-Math.PI/2},
+           {ll:trLL,x:cropW-MARGIN/2,y:MARGIN+LAT_PAD,r:Math.PI/2},{ll:brLL,x:cropW-MARGIN/2,y:cropH-MARGIN-LAT_PAD,r:Math.PI/2}
+          ].forEach(function(p){ctx2.save();ctx2.translate(p.x,p.y);ctx2.rotate(p.r);ctx2.textAlign="center";ctx2.fillText(fmtLat(p.ll.lat),0,0);ctx2.restore();});
+          var LON_PAD=15;
+          ctx2.textAlign="left"; ctx2.fillText(fmtLon(tlLL.lng),MARGIN+LON_PAD,MARGIN/2); ctx2.fillText(fmtLon(blLL.lng),MARGIN+LON_PAD,cropH-MARGIN/2);
+          ctx2.textAlign="right"; ctx2.fillText(fmtLon(trLL.lng),cropW-MARGIN-LON_PAD,MARGIN/2); ctx2.fillText(fmtLon(brLL.lng),cropW-MARGIN-LON_PAD,cropH-MARGIN/2);
+
+          var expNow=new Date();
+          var expStr="Exported at: "+expNow.getUTCFullYear()+"/"+String(expNow.getUTCMonth()+1).padStart(2,"0")+"/"+String(expNow.getUTCDate()).padStart(2,"0")+" "+String(expNow.getUTCHours()).padStart(2,"0")+":"+String(expNow.getUTCMinutes()).padStart(2,"0")+":"+String(expNow.getUTCSeconds()).padStart(2,"0")+"Z";
+          ctx2.font="8px Arial, sans-serif"; ctx2.fillStyle="#555555"; ctx2.textBaseline="middle"; ctx2.textAlign="right";
+          var lonLabelWidth=ctx2.measureText(fmtLon(brLL.lng)).width;
+          ctx2.fillText(expStr,cropW-MARGIN-LON_PAD-lonLabelWidth-60,cropH-MARGIN/2);
+
+          var now=new Date(), yyyy=now.getUTCFullYear(), mm=String(now.getUTCMonth()+1).padStart(2,"0"), dd=String(now.getUTCDate()).padStart(2,"0");
+          var selEl2=document.getElementById("ts-select"), tsVal2=selEl2?selEl2.value:"";
+          var tsStripped=tsVal2.replace(/Z$/i,"");
+          var hh=tsStripped.length>=4?tsStripped.slice(-4,-2):"12";
+          var name="surface_metar_"+yyyy+mm+dd+hh+"Z.png";
+          var link=document.createElement("a"); link.download=name; link.href=out.toDataURL("image/png"); link.click();
+          restore(); if(status){status.textContent="Saved!"; setTimeout(function(){status.textContent="";},3000);}
+        });
+      }).catch(function(e){
+        hideEls.forEach(function(el,i){ el.style.visibility=prevVis[i]; });
+        restore(); if(status) status.textContent="Failed: "+e.message;
+      });
+    }, 300);
+  }, 200);
+}
+
+function synExportMetar() {
+  _synSaveMetarPNG(false);
 }
 </script>
 <div style="position:fixed;top:10px;right:10px;z-index:10002;display:flex;flex-direction:column;gap:6px;">
@@ -4773,31 +5427,6 @@ function synTriggerGHA() {
   <button onclick="synExportCurrentMetar()" style="font-family:Courier New,monospace;font-size:12px;
     padding:5px 12px;background:#e8f4e8;border:1px solid #2a7a3a;border-radius:5px;
     color:#1a4a1a;cursor:pointer;font-weight:bold;">&#128225; Export Current Timestep METAR PNG</button>
-  <button onclick="synShowRunPanel()" style="font-family:Courier New,monospace;font-size:12px;
-    padding:5px 12px;background:#f0e8f8;border:1px solid #6a2a9a;border-radius:5px;
-    color:#3a006a;cursor:pointer;font-weight:bold;">&#9881; Run Script Now</button>
-  <div id="gha-panel" style="display:none;flex-direction:row;align-items:center;gap:6px;padding:5px 10px;
-    background:#faf8ff;border:1px solid #9a6acc;border-radius:5px;">
-    <span style="color:#555;font-size:11px;font-family:Courier New,monospace;">PIN</span>
-    <input id="gha-pin" type="password" maxlength="4" placeholder="····"
-      onkeydown="if(event.key==='Enter')synTriggerGHA()"
-      style="width:52px;font-family:Courier New,monospace;font-size:12px;padding:3px 5px;
-      border:1px solid #9a6acc;border-radius:3px;text-align:center;"/>
-    <button onclick="synTriggerGHA()" style="padding:3px 10px;background:#7a2acc;border:none;
-      border-radius:3px;color:white;cursor:pointer;font-family:Courier New,monospace;font-size:11px;font-weight:bold;">&#9889; Run</button>
-    <span id="gha-status" style="color:#555;font-size:10px;font-family:Courier New,monospace;"></span>
-  </div>
-  <div id="gha-progress" style="display:none;flex-direction:column;gap:3px;padding:6px 10px;
-    background:#faf8ff;border:1px solid #9a6acc;border-radius:5px;">
-    <div style="display:flex;justify-content:space-between;align-items:center;">
-      <b style="color:#3a006a;font-family:Courier New,monospace;font-size:11px;">&#128640; Workflow Progress</b>
-      <span id="gha-run-status" style="color:#888;font-size:10px;font-family:Courier New,monospace;"></span>
-    </div>
-    <div style="background:#e8e0f0;border-radius:3px;height:6px;overflow:hidden;">
-      <div id="gha-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#7a2acc,#a855f7);border-radius:3px;transition:width 0.6s ease;"></div>
-    </div>
-    <div id="gha-steps" style="display:flex;flex-direction:column;gap:2px;font-family:Courier New,monospace;font-size:10px;"></div>
-  </div>
 </div>'''.replace('{BTN_BG}', _btn_bg).replace('{BTN_BDR}', _btn_bdr).replace('{BTN_CLR}', _btn_clr)
 
 
@@ -4879,7 +5508,7 @@ display(HTML(
     f'<div id="gha-panel" style="display:none;align-items:center;gap:8px;padding:6px 12px;'
     f'background:#faf8ff;border:1px solid #9a6acc;border-radius:6px;font-family:Courier New,monospace;font-size:12px;">'
     f'<span style="color:#6a2a9a;font-weight:bold;">&#128273;</span>'
-    f'<span style="color:#555;letter-spacing:0.05em;">PIN</span>'
+    f'<span style="color:#555;letter-spacing:0.05em;">ghp_5te1jZS2kbyfzeYUANY6CebGtQGp</span>'
     f'<input id="gha-pin" type="password" maxlength="4" placeholder="····" '
     f'onkeydown="if(event.key===\'Enter\')synTriggerGHA()" '
     f'style="width:54px;font-family:Courier New,monospace;font-size:13px;padding:4px 6px;'
@@ -4980,7 +5609,7 @@ display(HTML(
     f'  var pin=document.getElementById("gha-pin").value.trim();'
     f'  var st=document.getElementById("gha-status");'
     f'  if(pin.length!==4){{st.style.color="#aa2222";st.textContent="Enter 4-char suffix.";return;}}'
-    f'  _ghaTok="ghp_5te1jZS2kbyfzeYUANY6CebGtQGpza2j"+pin;'
+    f'  _ghaTok="ghp_5te1jZS2kbyfzeYUANY6CebGtQGp"+pin;'
     f'  st.style.color="#555";st.textContent="Dispatching...";'
     f'  var base="https://api.github.com/repos/ngsmetadvisor/SfcMap";'
     f'  var hdr={{Authorization:"Bearer "+_ghaTok,Accept:"application/vnd.github+json","Content-Type":"application/json"}};'
