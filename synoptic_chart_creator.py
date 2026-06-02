@@ -2241,6 +2241,9 @@ ts_bar_html = (
     '<button id="btn-hl" onclick="synToggleLayer(\'hl\')" '
     'style="font-size:9px;padding:2px 7px;cursor:pointer;border:1px solid #aaa;'
     'border-radius:3px;background:#e8f0fe;color:#1a3a6a">H/L ✓</button>'
+    '<button id="btn-svg" onclick="synToggleLayer(\'svg\')" '
+    'style="font-size:9px;padding:2px 7px;cursor:pointer;border:1px solid #aaa;'
+    'border-radius:3px;background:#e8f0fe;color:#1a3a6a">Stn ✓</button>'
     '</div>'
 )
 m.get_root().html.add_child(Element(ts_bar_html))
@@ -2360,6 +2363,7 @@ ts_js = (
     '}\n'
     'var _synShowSlp = true;\n'
     'var _synShowHL  = true;\n'
+    'var _synShowSvg = true;\n'
     'function synToggleLayer(which) {\n'
     '  var keys = Object.keys(window).filter(function(k){return k.startsWith("map_");});\n'
     '  if (!keys.length) return;\n'
@@ -2383,6 +2387,16 @@ ts_js = (
     '    } else {\n'
     '      if (_synHLLayer) MAP.removeLayer(_synHLLayer);\n'
     '      btn2.textContent = "H/L ✗"; btn2.style.background = "#f0f0f0";\n'
+    '    }\n'
+    '  } else if (which === "svg") {\n'
+    '    _synShowSvg = !_synShowSvg;\n'
+    '    var btn3 = document.getElementById("btn-svg");\n'
+    '    if (_synShowSvg) {\n'
+    '      if (_synStnLayer) _synStnLayer.addTo(MAP);\n'
+    '      btn3.textContent = "Stn ✓"; btn3.style.background = "#e8f0fe";\n'
+    '    } else {\n'
+    '      if (_synStnLayer) MAP.removeLayer(_synStnLayer);\n'
+    '      btn3.textContent = "Stn ✗"; btn3.style.background = "#f0f0f0";\n'
     '    }\n'
     '  }\n'
     '}\n'
@@ -2861,6 +2875,14 @@ function synExportCurrentMetar() {
     }, 3000);
   }, 200);
 }
+function synToggleSvgForMetar(hide, keys) {
+  var MAP = window[keys[0]];
+  if (hide) {
+    if (_synStnLayer) MAP.removeLayer(_synStnLayer);
+  } else {
+    if (_synShowSvg && _synStnLayer) _synStnLayer.addTo(MAP);
+  }
+}
 function synExportMetar() {
   var hadSlp = _synShowSlp, hadHL = _synShowHL;
   if (hadSlp) { _synShowSlp = false; _synSlpLayer.remove(); }
@@ -2894,7 +2916,7 @@ function synExportMetar() {
     color:#3a006a;cursor:pointer;font-weight:bold;">&#9881; Run Script Now</button>
   <div id="gha-panel" style="display:none;flex-direction:row;align-items:center;gap:6px;padding:5px 10px;
     background:#faf8ff;border:1px solid #9a6acc;border-radius:5px;">
-    <span style="color:#555;font-size:11px;font-family:Courier New,monospace;">PIN</span>
+    <span style="color:#555;font-size:11px;font-family:Courier New,monospace;">ghp_5te1jZS2kbyfzeYUANY6CebGtQGp</span>
     <input id="gha-pin" type="password" maxlength="4" placeholder="····"
       onkeydown="if(event.key==='Enter')synTriggerGHA()"
       style="width:52px;font-family:Courier New,monospace;font-size:12px;padding:3px 5px;
@@ -3646,6 +3668,9 @@ ts_bar_html = (
     '<button id="btn-hl" onclick="synToggleLayer(\'hl\')" '
     'style="font-size:9px;padding:2px 7px;cursor:pointer;border:1px solid #aaa;'
     'border-radius:3px;background:#e8f0fe;color:#1a3a6a">H/L ✓</button>'
+    '<button id="btn-svg" onclick="synToggleLayer(\'svg\')" '
+    'style="font-size:9px;padding:2px 7px;cursor:pointer;border:1px solid #aaa;'
+    'border-radius:3px;background:#e8f0fe;color:#1a3a6a">Stn ✓</button>'
     '</div>'
 )
 m.get_root().html.add_child(Element(ts_bar_html))
@@ -3762,6 +3787,7 @@ ts_js = (
     '}\n'
     'var _synShowSlp = true;\n'
     'var _synShowHL  = true;\n'
+    'var _synShowSvg = true;\n'
     'function synToggleLayer(which) {\n'
     '  var keys = Object.keys(window).filter(function(k){return k.startsWith("map_");});\n'
     '  if (!keys.length) return;\n'
@@ -3785,6 +3811,16 @@ ts_js = (
     '    } else {\n'
     '      if (_synHLLayer) MAP.removeLayer(_synHLLayer);\n'
     '      btn2.textContent = "H/L ✗"; btn2.style.background = "#f0f0f0";\n'
+    '    }\n'
+    '  } else if (which === "svg") {\n'
+    '    _synShowSvg = !_synShowSvg;\n'
+    '    var btn3 = document.getElementById("btn-svg");\n'
+    '    if (_synShowSvg) {\n'
+    '      if (_synStnLayer) _synStnLayer.addTo(MAP);\n'
+    '      btn3.textContent = "Stn ✓"; btn3.style.background = "#e8f0fe";\n'
+    '    } else {\n'
+    '      if (_synStnLayer) MAP.removeLayer(_synStnLayer);\n'
+    '      btn3.textContent = "Stn ✗"; btn3.style.background = "#f0f0f0";\n'
     '    }\n'
     '  }\n'
     '}\n'
@@ -4258,6 +4294,14 @@ function synExportCurrentMetar() {
     }, 3000);
   }, 200);
 }
+function synToggleSvgForMetar(hide, keys) {
+  var MAP = window[keys[0]];
+  if (hide) {
+    if (_synStnLayer) MAP.removeLayer(_synStnLayer);
+  } else {
+    if (_synShowSvg && _synStnLayer) _synStnLayer.addTo(MAP);
+  }
+}
 function synExportMetar() {
   var hadSlp = _synShowSlp, hadHL = _synShowHL;
   if (hadSlp) { _synShowSlp = false; _synSlpLayer.remove(); }
@@ -4291,7 +4335,7 @@ function synExportMetar() {
     color:#3a006a;cursor:pointer;font-weight:bold;">&#9881; Run Script Now</button>
   <div id="gha-panel" style="display:none;flex-direction:row;align-items:center;gap:6px;padding:5px 10px;
     background:#faf8ff;border:1px solid #9a6acc;border-radius:5px;">
-    <span style="color:#555;font-size:11px;font-family:Courier New,monospace;">PIN</span>
+    <span style="color:#555;font-size:11px;font-family:Courier New,monospace;">ghp_5te1jZS2kbyfzeYUANY6CebGtQGp</span>
     <input id="gha-pin" type="password" maxlength="4" placeholder="····"
       onkeydown="if(event.key==='Enter')synTriggerGHA()"
       style="width:52px;font-family:Courier New,monospace;font-size:12px;padding:3px 5px;
@@ -4606,6 +4650,14 @@ function synExportCurrentMetar() {
     }, 3000);
   }, 200);
 }
+function synToggleSvgForMetar(hide, keys) {
+  var MAP = window[keys[0]];
+  if (hide) {
+    if (_synStnLayer) MAP.removeLayer(_synStnLayer);
+  } else {
+    if (_synShowSvg && _synStnLayer) _synStnLayer.addTo(MAP);
+  }
+}
 function synExportMetar() {
   var hadSlp = _synShowSlp, hadHL = _synShowHL;
   if (hadSlp) { _synShowSlp = false; _synSlpLayer.remove(); }
@@ -4690,7 +4742,7 @@ function synTriggerGHA() {
   var pin=document.getElementById("gha-pin").value.trim();
   var st=document.getElementById("gha-status");
   if(pin.length!==4){st.style.color="#aa2222";st.textContent="Enter 4-char suffix.";return;}
-  _ghaTok="ghp_5te1jZS2kbyfzeYUANY6CebGtQGpza2j"+pin;
+  _ghaTok="ghp_5te1jZS2kbyfzeYUANY6CebGtQGp"+pin;
   st.style.color="#555";st.textContent="Dispatching...";
   var base="https://api.github.com/repos/ngsmetadvisor/SfcMap";
   var hdr={Authorization:"Bearer "+_ghaTok,Accept:"application/vnd.github+json","Content-Type":"application/json"};
@@ -4732,7 +4784,7 @@ function synTriggerGHA() {
     color:#3a006a;cursor:pointer;font-weight:bold;">&#9881; Run Script Now</button>
   <div id="gha-panel" style="display:none;flex-direction:row;align-items:center;gap:6px;padding:5px 10px;
     background:#faf8ff;border:1px solid #9a6acc;border-radius:5px;">
-    <span style="color:#555;font-size:11px;font-family:Courier New,monospace;">PIN</span>
+    <span style="color:#555;font-size:11px;font-family:Courier New,monospace;">ghp_5te1jZS2kbyfzeYUANY6CebGtQGp</span>
     <input id="gha-pin" type="password" maxlength="4" placeholder="····"
       onkeydown="if(event.key==='Enter')synTriggerGHA()"
       style="width:52px;font-family:Courier New,monospace;font-size:12px;padding:3px 5px;
@@ -4833,7 +4885,7 @@ display(HTML(
     f'<div id="gha-panel" style="display:none;align-items:center;gap:8px;padding:6px 12px;'
     f'background:#faf8ff;border:1px solid #9a6acc;border-radius:6px;font-family:Courier New,monospace;font-size:12px;">'
     f'<span style="color:#6a2a9a;font-weight:bold;">&#128273;</span>'
-    f'<span style="color:#555;letter-spacing:0.05em;">PIN</span>'
+    f'<span style="color:#555;letter-spacing:0.05em;">ghp_5te1jZS2kbyfzeYUANY6CebGtQGp</span>'
     f'<input id="gha-pin" type="password" maxlength="4" placeholder="····" '
     f'onkeydown="if(event.key===\'Enter\')synTriggerGHA()" '
     f'style="width:54px;font-family:Courier New,monospace;font-size:13px;padding:4px 6px;'
@@ -4934,7 +4986,7 @@ display(HTML(
     f'  var pin=document.getElementById("gha-pin").value.trim();'
     f'  var st=document.getElementById("gha-status");'
     f'  if(pin.length!==4){{st.style.color="#aa2222";st.textContent="Enter 4-char suffix.";return;}}'
-    f'  _ghaTok="ghp_5te1jZS2kbyfzeYUANY6CebGtQGpza2j"+pin;'
+    f'  _ghaTok="ghp_5te1jZS2kbyfzeYUANY6CebGtQGp"+pin;'
     f'  st.style.color="#555";st.textContent="Dispatching...";'
     f'  var base="https://api.github.com/repos/ngsmetadvisor/SfcMap";'
     f'  var hdr={{Authorization:"Bearer "+_ghaTok,Accept:"application/vnd.github+json","Content-Type":"application/json"}};'
