@@ -2936,7 +2936,7 @@ function synExportMetar() {
     color:#1a4a1a;cursor:pointer;font-weight:bold;">&#128225; Export Current Timestep METAR PNG</button>
   <button onclick="synShowRunPanel()" style="font-family:Courier New,monospace;font-size:12px;
     padding:5px 12px;background:#f0e8f8;border:1px solid #6a2a9a;border-radius:5px;
-    color:#3a006a;cursor:pointer;font-weight:bold;">&#9881; Run Script Now</button>
+    color:#3a006a;cursor:pointer;font-weight:bold;"><span id="gha-run-btn-text">&#9881; Run Script Now</span><span id="gha-last-run" style="font-size:9px;font-weight:normal;color:#9a6acc;margin-left:6px;"></span></button>
   <div id="gha-panel" style="display:none;flex-direction:row;align-items:center;gap:6px;padding:5px 10px;
     background:#faf8ff;border:1px solid #9a6acc;border-radius:5px;">
     <span style="color:#555;font-size:11px;font-family:Courier New,monospace;">PIN</span>
@@ -4379,7 +4379,7 @@ function synExportMetar() {
     color:#1a4a1a;cursor:pointer;font-weight:bold;">&#128225; Export Current Timestep METAR PNG</button>
   <button onclick="synShowRunPanel()" style="font-family:Courier New,monospace;font-size:12px;
     padding:5px 12px;background:#f0e8f8;border:1px solid #6a2a9a;border-radius:5px;
-    color:#3a006a;cursor:pointer;font-weight:bold;">&#9881; Run Script Now</button>
+    color:#3a006a;cursor:pointer;font-weight:bold;"><span id="gha-run-btn-text">&#9881; Run Script Now</span><span id="gha-last-run" style="font-size:9px;font-weight:normal;color:#9a6acc;margin-left:6px;"></span></button>
   <div id="gha-panel" style="display:none;flex-direction:row;align-items:center;gap:6px;padding:5px 10px;
     background:#faf8ff;border:1px solid #9a6acc;border-radius:5px;">
     <span style="color:#555;font-size:11px;font-family:Courier New,monospace;">PIN</span>
@@ -4759,7 +4759,10 @@ function synShowRunPanel() {
   var p=document.getElementById("gha-panel");
   p.style.display=p.style.display==="flex"?"none":"flex";
   if(p.style.display==="flex") setTimeout(function(){document.getElementById("gha-pin").focus();},50);
+  try{var _lrt=localStorage.getItem("syn_last_run");var _lrel=document.getElementById("gha-last-run");if(_lrel&&_lrt)_lrel.textContent="Last: "+_lrt;}catch(e){}
 }
+function synInitLastRun() {try{var _lrt=localStorage.getItem("syn_last_run");var _lrel=document.getElementById("gha-last-run");if(_lrel&&_lrt)_lrel.textContent="Last: "+_lrt;}catch(e){}}
+setTimeout(synInitLastRun, 800);
 function synBuildStepRows() {
   var c=document.getElementById("gha-steps"); c.innerHTML="";
   _ghaSteps.forEach(function(s,i) {
@@ -4804,7 +4807,7 @@ function synPollRun() {
       if(bar&&job.conclusion==="success"){bar.style.width="100%";bar.style.background="linear-gradient(90deg,#1a7a2a,#22c55e)";}
       else if(bar) bar.style.background="#aa2222";
       var st=document.getElementById("gha-status");
-      if(st&&job.conclusion==="success"){st.style.color="#1a6a2a";st.textContent="\u2713 Done! Reload to see update.";}
+      if(st&&job.conclusion==="success"){st.style.color="#1a6a2a";st.textContent="\u2713 Done! Reload to see update.";var _now=new Date();var _lrt=_now.getUTCFullYear()+"-"+String(_now.getUTCMonth()+1).padStart(2,"0")+"-"+String(_now.getUTCDate()).padStart(2,"0")+" "+String(_now.getUTCHours()).padStart(2,"0")+":"+String(_now.getUTCMinutes()).padStart(2,"0")+"Z";try{localStorage.setItem("syn_last_run",_lrt);}catch(e){}var _lrel=document.getElementById("gha-last-run");if(_lrel)_lrel.textContent="Last: "+_lrt;}
       else if(st){st.style.color="#aa2222";st.textContent="Workflow "+job.conclusion+".";}
     }
   }).catch(function(){});
@@ -4852,7 +4855,7 @@ function synTriggerGHA() {
     color:#1a4a1a;cursor:pointer;font-weight:bold;">&#128225; Export Current Timestep METAR PNG</button>
   <button onclick="synShowRunPanel()" style="font-family:Courier New,monospace;font-size:12px;
     padding:5px 12px;background:#f0e8f8;border:1px solid #6a2a9a;border-radius:5px;
-    color:#3a006a;cursor:pointer;font-weight:bold;">&#9881; Run Script Now</button>
+    color:#3a006a;cursor:pointer;font-weight:bold;"><span id="gha-run-btn-text">&#9881; Run Script Now</span><span id="gha-last-run" style="font-size:9px;font-weight:normal;color:#9a6acc;margin-left:6px;"></span></button>
   <div id="gha-panel" style="display:none;flex-direction:row;align-items:center;gap:6px;padding:5px 10px;
     background:#faf8ff;border:1px solid #9a6acc;border-radius:5px;">
     <span style="color:#555;font-size:11px;font-family:Courier New,monospace;">PIN</span>
@@ -4952,7 +4955,7 @@ display(HTML(
     f'<button onclick="synShowRunPanel()" '
     f'style="font-family:Courier New,monospace;font-size:13px;padding:7px 16px;'
     f'background:#f0e8f8;border:1px solid #6a2a9a;border-radius:5px;'
-    f'color:#3a006a;cursor:pointer;font-weight:bold;">&#9881; Run Script Now</button>'
+    f'color:#3a006a;cursor:pointer;font-weight:bold;"><span id="gha-run-btn-text">&#9881; Run Script Now</span><span id="gha-last-run" style="font-size:9px;font-weight:normal;color:#9a6acc;margin-left:6px;"></span></button>'
     f'<div id="gha-panel" style="display:none;align-items:center;gap:8px;padding:6px 12px;'
     f'background:#faf8ff;border:1px solid #9a6acc;border-radius:6px;font-family:Courier New,monospace;font-size:12px;">'
     f'<span style="color:#6a2a9a;font-weight:bold;">&#128273;</span>'
