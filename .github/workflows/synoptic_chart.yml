@@ -3,6 +3,8 @@ name: Synoptic Chart
 on:
   # ── Manual trigger (the "Run workflow" button in the Actions tab) ──────────
   workflow_dispatch:
+  repository_dispatch:
+    types: [run-sfcmap]
 
   # ── Scheduled runs ────────────────────────────────────────────────────────
   schedule:
