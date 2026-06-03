@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # 🌀 Surface Synoptic Map — Western Canada
 # Fetches live METARs · Kriging/RBF interpolation · 4 hPa SLP isobars · WMO station models
-# Source: http://orangecore.net/met/wxchart/AP_location.csv
+# Source: https://raw.githubusercontent.com/ngsmetadvisor/SfcMap/main/AP_location.csv
 # METAR source: https://aviationweather.gov/api/data/metar
 
 # ── Cell 1 . Install & import packages ────────────────────────
@@ -72,7 +72,7 @@ print('✓ All packages ready')
 # ── Cell 1.5 . Configuration ──────────────────────────────────
 
 # ── Data sources ──────────────────────────────────────────────
-CSV_URL   = 'http://orangecore.net/met/wxchart/AP_location.csv'
+CSV_URL   = 'https://raw.githubusercontent.com/ngsmetadvisor/SfcMap/main/AP_location.csv'
 METAR_API = 'https://aviationweather.gov/api/data/metar'
 COVERAGE  = 'chart'          # essential | standard | all | chart
 EXPORT_TIME = '1200Z'        # 0000Z | 0600Z | 1200Z | 1800Z
