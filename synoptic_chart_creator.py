@@ -569,9 +569,7 @@ display(SVG(_demo_svg))
 import xml.etree.ElementTree as _ET
 
 _KML_URL = (
-    'https://github.com/ngsmetadvisor/SfcMap/raw/'
-    '920cf65213038f03b6c927f218f76297c5c619c6/'
-    'Alberta_Fire_Weather_Forecast_Zones.kml'
+    'https://github.com/ngsmetadvisor/SfcMap/raw/920cf65213038f03b6c927f218f76297c5c619c6/Alberta_Fire_Weather_Forecast_Zones.kml'
 )
 _fire_zones_geojson_str = json.dumps({"type": "FeatureCollection", "features": []})  # safe fallback
 
