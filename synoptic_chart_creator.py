@@ -563,6 +563,85 @@ display(SVG(_demo_svg))
 # ---- ALBERTA FIRE WEATHER ZONES (self-contained, no file needed) -------
 # Replace the entire fire_zones_html block in Cell 9 with this.
 
+# ── Fetch Alberta Fire Weather Forecast Zones KML from repo → GeoJSON ────────
+# Raw KML committed at a pinned commit in the SfcMap repo.
+# Parsed with the stdlib xml.etree.ElementTree — no extra dependencies.
+import xml.etree.ElementTree as _ET
+
+_KML_URL = (
+    'https://github.com/ngsmetadvisor/SfcMap/raw/'
+    '920cf65213038f03b6c927f218f76297c5c619c6/'
+    'Alberta_Fire_Weather_Forecast_Zones.kml'
+)
+_fire_zones_geojson_str = json.dumps({"type": "FeatureCollection", "features": []})  # safe fallback
+
+def _kml_coords_to_ring(coord_text):
+    """'lon,lat,alt lon,lat,alt ...' → [[lon,lat], ...]"""
+    ring = []
+    for token in coord_text.strip().split():
+        parts = token.split(',')
+        if len(parts) >= 2:
+            try:
+                ring.append([float(parts[0]), float(parts[1])])
+            except ValueError:
+                pass
+    return ring
+
+def _kml_to_geojson(kml_bytes):
+    """Minimal KML Placemark → GeoJSON FeatureCollection converter."""
+    root = _ET.fromstring(kml_bytes)
+    ns = {'kml': 'http://www.opengis.net/kml/2.2'}
+    # also handle KML files without a namespace
+    features = []
+    for pm in root.iter('{http://www.opengis.net/kml/2.2}Placemark'):
+        name = pm.findtext('{http://www.opengis.net/kml/2.2}name') or 'Fire Zone'
+        # collect all Polygon elements (handles MultiGeometry too)
+        polygons = list(pm.iter('{http://www.opengis.net/kml/2.2}Polygon'))
+        if not polygons:
+            continue
+        rings_list = []
+        for poly in polygons:
+            outer = poly.find('.//{http://www.opengis.net/kml/2.2}outerBoundaryIs'
+                              '/{http://www.opengis.net/kml/2.2}LinearRing'
+                              '/{http://www.opengis.net/kml/2.2}coordinates')
+            if outer is None or not outer.text:
+                continue
+            ring = _kml_coords_to_ring(outer.text)
+            if len(ring) < 3:
+                continue
+            # close the ring if needed
+            if ring[0] != ring[-1]:
+                ring.append(ring[0])
+            rings_list.append(ring)
+
+        if not rings_list:
+            continue
+
+        if len(rings_list) == 1:
+            geometry = {"type": "Polygon", "coordinates": rings_list}
+        else:
+            geometry = {"type": "MultiPolygon",
+                        "coordinates": [[[r]] for r in rings_list]}
+
+        features.append({
+            "type": "Feature",
+            "properties": {"name": name.strip()},
+            "geometry": geometry,
+        })
+    return {"type": "FeatureCollection", "features": features}
+
+try:
+    print(f'Fetching Alberta Fire Weather Forecast Zones KML from repo...')
+    _fz_resp = requests.get(_KML_URL, timeout=30)
+    _fz_resp.raise_for_status()
+    _fz_geojson = _kml_to_geojson(_fz_resp.content)
+    _fire_zones_geojson_str = json.dumps(_fz_geojson)
+    _fz_count = len(_fz_geojson.get('features', []))
+    print(f'✓ Alberta Fire Weather Forecast Zones loaded: {_fz_count} zones')
+except Exception as _fz_err:
+    print(f'⚠ Fire zones fetch/parse failed ({_fz_err}) — map will load without fire zone layer')
+# ─────────────────────────────────────────────────────────────────────────────
+
 fire_zones_html = (
     '<script>\n'
     'var _FIRE_ZONES_GEOJSON = ' + _fire_zones_geojson_str + ';\n'
