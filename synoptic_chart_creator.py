@@ -800,7 +800,6 @@ print(f'  Total STATIONS: {len(STATIONS)}')
 # Appended to metar_records[] at the END of Cell 5 — before Cell 5b runs.
 
 from datetime import datetime, timezone as _tz
-from IPython.display import display, HTML
 
 
 
@@ -947,7 +946,6 @@ if ec_fetch_errors:
 # @title
 # ── Cell 4 . Fetch live METARs from aviationweather.gov ───────
 import concurrent.futures, time
-from IPython.display import display, HTML
 
 EXPECTED_HOURS = [0, 6, 12, 18]
 
