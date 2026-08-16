@@ -717,25 +717,14 @@ fire_zones_html = (
 
 print('Alberta Fire Zone XML imported')
 
+# @title
 # ── Cell 3 . Load station list from orangecore.net ────────────
 import csv, io, math as _math
 
 def load_stations(url, coverage='standard'):
-    # Use a local copy if available — avoids network dependency on the runner
-    _local = 'AP_location.csv'
-    if _os.path.exists(_local):
-        print(f'Using local station list: {_local}')
-        with open(_local, encoding='utf-8') as _f:
-            _text = _f.read()
-    else:
-        print(f'Fetching station list from {url}')
-        r = requests.get(url, timeout=15)
-        r.raise_for_status()
-        _text = r.text
-        # Cache it locally for next time
-        with open(_local, 'w', encoding='utf-8') as _f:
-            _f.write(_text)
-    reader = csv.DictReader(io.StringIO(_text))
+    r = requests.get(url, timeout=15)
+    r.raise_for_status()
+    reader = csv.DictReader(io.StringIO(r.text))
     stations = {}
     for row in reader:
         icao = row.get('Code','').strip()
@@ -805,11 +794,13 @@ print(f'  + {len(EC_LATITUDES)} EC model virtual stations registered')
 print(f'  Total STATIONS: {len(STATIONS)}')
 
 
+# @title METAR from Aviationweather
 # ── Cell 3b . Fetch & parse EC model data from Open-Meteo ─────────────────────
 # Produces ec_metar_records[] with the IDENTICAL schema as parse_metar_line().
 # Appended to metar_records[] at the END of Cell 5 — before Cell 5b runs.
 
 from datetime import datetime, timezone as _tz
+from IPython.display import display, HTML
 
 
 
@@ -949,8 +940,14 @@ if ec_fetch_errors:
     print(f'  ✗ Failed: {ec_fetch_errors}')
 
 
+
+
+
+
+# @title
 # ── Cell 4 . Fetch live METARs from aviationweather.gov ───────
 import concurrent.futures, time
+from IPython.display import display, HTML
 
 EXPECTED_HOURS = [0, 6, 12, 18]
 
@@ -958,12 +955,15 @@ def fetch_chunk(codes, hours=12, retries=3, backoff=2):
     for attempt in range(retries):
         try:
             params = {'ids': ','.join(codes), 'format': 'raw',
-                      'hours': hours, 'mostRecent': 'false'}
+                      'hours': hours}
             r = requests.get(METAR_API, params=params, timeout=30)
+            print(f'DEBUG fetch: status={r.status_code} len={len(r.text)} url={r.url}')
+            print(f'DEBUG body[:300]: {r.text[:300]!r}')
             if r.ok and r.text.strip():
                 return r.text, []
             time.sleep(backoff * (attempt + 1))
-        except Exception:
+        except Exception as e:
+            print(f'DEBUG exception: {e}')
             time.sleep(backoff * (attempt + 1))
     return '', codes
 
@@ -1066,6 +1066,7 @@ else:
     </div>'''))
 
 
+# @title
 # ── Cell 5 . Parse METAR fields ───────────────────────────────
 
 def parse_metar_line(line, stations):
@@ -1389,7 +1390,9 @@ print(f'  SLP: {slp_count}  Wind: {wind_count}  Temp: {temp_count}')
 
 # ── Summary table ─────────────────────────────────────────────────────────────
 import pandas as pd
+from IPython.display import display, HTML
 
+print(f'DEBUG: metar_records has {len(metar_records)} entries before building _df')
 _df = pd.DataFrame([{
     'ICAO':       d['icao'],
     'Src':        d.get('source', 'metar'),
@@ -1418,6 +1421,8 @@ _df = pd.DataFrame([{
 } for d in metar_records])
 
 def _style_df(df, caption):
+    if df.empty:
+        return f'<div style="font-family:monospace;color:#cc0000;padding:8px;">⚠ {caption} — NO RECORDS TO DISPLAY (metar_records is empty)</div>'
     grad_cols = [c for c in ['Temp(C)','Dew(C)'] if c in df.columns]
     slp_cols  = [c for c in ['SLP(hPa)']          if c in df.columns]
     okta_cols = [c for c in ['Oktas']              if c in df.columns]
@@ -1461,6 +1466,7 @@ display(HTML(f'''
 </div>'''))
 
 
+# @title
 # ── Cell 5b . Compute pressure tendency from 3-hr SLP history ─
 # UNCHANGED — now naturally covers both real METAR and EC model records.
 
@@ -1655,6 +1661,7 @@ display(HTML(f'''
   <div style="line-height:2.2;overflow:visible;">{_badge_rows_5b}</div>
 </div>'''))
 
+# @title
 # ── Cell 5c . Fetch Fort Vermillion (71024) from ogimet ───────────────────────
 import requests, re
 from datetime import datetime, timezone as _tz
@@ -1681,7 +1688,7 @@ def fetch_ogimet_synop(wmo_id, ndays=2):
     from datetime import timedelta
     start = now - timedelta(days=ndays)
     try:
-        r = requests.get('https://www.ogimet.com/123456/cgi-bin/getsynop', params={   #123456 is injected to stop the fetching. too pack to show on map
+        r = requests.get(OGIMET_SYNOP_URL, params={
             'block': wmo_id,
             'begin': start.strftime('%Y%m%d%H%M'),
             'end':   now.strftime('%Y%m%d%H%M'),
@@ -1818,6 +1825,7 @@ except Exception as e:
     print(f'✗ Fort Vermillion fetch failed: {e}')
 
 import pandas as pd
+from IPython.display import display, HTML
 
 _fv_df = pd.DataFrame([{
     'Timestamp':  r['timestamp'],
@@ -1840,6 +1848,7 @@ if fv_records:
     display(HTML(_fv_styler.format(na_rep='—', precision=1).to_html()))
 else:
     display(HTML('<div style="font-family:monospace;color:#888;">Fort Vermillion — no data available</div>'))
+    
 
 # ── Cell 6 . Kriging / RBF interpolation ──────────────────────
 from scipy.interpolate import RBFInterpolator
