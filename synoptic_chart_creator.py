@@ -2135,6 +2135,20 @@ m = folium.Map(
     prefer_canvas=True
 )
 
+# GOES-West Day Vis / Night IR (ECCC GeoMet WMS) — added first so it sits under everything else
+folium.WmsTileLayer(
+    url='https://geo.weather.gc.ca/geomet',
+    layers='GOES-West_1km_DayVis-NightIR',
+    fmt='image/png',
+    transparent=True,
+    version='1.3.0',
+    name='GOES-West (Day Vis / Night IR)',
+    attr='Environment and Climate Change Canada (GeoMet)',
+    overlay=False,
+    control=False,
+    max_zoom=10
+).add_to(m)
+
 # tile layers — Blank added last so Leaflet selects it as default
 folium.TileLayer(
     tiles='https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
@@ -2164,6 +2178,8 @@ m.get_root().html.add_child(Element(
     '      if(l instanceof L.TileLayer){\n'
     '        if(l.options.name==="Blank (borders only)" || (l._url&&l._url==="about:blank")){\n'
     '          blankLayer=l;\n'
+    '        } else if(l.options && l.options.name==="GOES-West (Day Vis / Night IR)"){\n'
+    '          // leave alone — controlled by its own GOES toggle button\n'
     '        } else {\n'
     '          others.push(l);\n'
     '        }\n'
@@ -2179,7 +2195,8 @@ m.get_root().html.add_child(Element(
     '    // also fire on every layeradd to catch late-loading tiles\n'
     '    MAP.on("layeradd", function(){\n'
     '      MAP.eachLayer(function(l){\n'
-    '        if(l instanceof L.TileLayer && l._url && l._url!=="about:blank"){\n'
+    '        if(l instanceof L.TileLayer && l._url && l._url!=="about:blank" '
+    '           && !(l.options && l.options.name==="GOES-West (Day Vis / Night IR)")){\n'
     '          MAP.removeLayer(l);\n'
     '        }\n'
     '      });\n'
@@ -2352,6 +2369,9 @@ ts_bar_html = (
     '<button id="btn-svg" onclick="synToggleLayer(\'svg\')" '
     'style="font-size:9px;padding:2px 7px;cursor:pointer;border:1px solid #aaa;'
     'border-radius:3px;background:#e8f0fe;color:#1a3a6a">Stn ✓</button>'
+    '<button id="btn-goes" onclick="synToggleLayer(\'goes\')" '
+    'style="font-size:9px;padding:2px 7px;cursor:pointer;border:1px solid #aaa;'
+    'border-radius:3px;background:#e8f0fe;color:#1a3a6a">GOES ✓</button>'
     '</div>'
 )
 m.get_root().html.add_child(Element(ts_bar_html))
@@ -2511,6 +2531,20 @@ ts_js = (
     '    } else {\n'
     '      styleEl.textContent = "";\n'
     '      btn3.textContent = "Stn ✓"; btn3.style.background = "#e8f0fe"; btn3.style.color = "#1a3a6a"; btn3.style.borderColor = "#aaa";\n'
+    '    }\n'
+    '  } else if (which === "goes") {\n'
+    '    var goesLayer = null;\n'
+    '    MAP.eachLayer(function(l){\n'
+    '      if (l.wmsParams && l.wmsParams.layers === "GOES-West_1km_DayVis-NightIR") goesLayer = l;\n'
+    '    });\n'
+    '    var btn4 = document.getElementById("btn-goes");\n'
+    '    if (!goesLayer) { if (btn4) { btn4.textContent = "GOES ✗"; btn4.style.background = "#f0f0f0"; } return; }\n'
+    '    if (MAP.hasLayer(goesLayer)) {\n'
+    '      MAP.removeLayer(goesLayer);\n'
+    '      if (btn4) { btn4.textContent = "GOES ✗"; btn4.style.background = "#f0f0f0"; }\n'
+    '    } else {\n'
+    '      goesLayer.addTo(MAP);\n'
+    '      if (btn4) { btn4.textContent = "GOES ✓"; btn4.style.background = "#e8f0fe"; }\n'
     '    }\n'
     '  }\n'
     '}\n'
@@ -3597,6 +3631,20 @@ m = folium.Map(
     prefer_canvas=True
 )
 
+# GOES-West Day Vis / Night IR (ECCC GeoMet WMS) — added first so it sits under everything else
+folium.WmsTileLayer(
+    url='https://geo.weather.gc.ca/geomet',
+    layers='GOES-West_1km_DayVis-NightIR',
+    fmt='image/png',
+    transparent=True,
+    version='1.3.0',
+    name='GOES-West (Day Vis / Night IR)',
+    attr='Environment and Climate Change Canada (GeoMet)',
+    overlay=False,
+    control=False,
+    max_zoom=10
+).add_to(m)
+
 # tile layers — Blank added last so Leaflet selects it as default
 folium.TileLayer(
     tiles='https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
@@ -3626,6 +3674,8 @@ m.get_root().html.add_child(Element(
     '      if(l instanceof L.TileLayer){\n'
     '        if(l.options.name==="Blank (borders only)" || (l._url&&l._url==="about:blank")){\n'
     '          blankLayer=l;\n'
+    '        } else if(l.options && l.options.name==="GOES-West (Day Vis / Night IR)"){\n'
+    '          // leave alone — controlled by its own GOES toggle button\n'
     '        } else {\n'
     '          others.push(l);\n'
     '        }\n'
@@ -3641,7 +3691,8 @@ m.get_root().html.add_child(Element(
     '    // also fire on every layeradd to catch late-loading tiles\n'
     '    MAP.on("layeradd", function(){\n'
     '      MAP.eachLayer(function(l){\n'
-    '        if(l instanceof L.TileLayer && l._url && l._url!=="about:blank"){\n'
+    '        if(l instanceof L.TileLayer && l._url && l._url!=="about:blank" '
+    '           && !(l.options && l.options.name==="GOES-West (Day Vis / Night IR)")){\n'
     '          MAP.removeLayer(l);\n'
     '        }\n'
     '      });\n'
@@ -3814,6 +3865,9 @@ ts_bar_html = (
     '<button id="btn-svg" onclick="synToggleLayer(\'svg\')" '
     'style="font-size:9px;padding:2px 7px;cursor:pointer;border:1px solid #aaa;'
     'border-radius:3px;background:#e8f0fe;color:#1a3a6a">Stn ✓</button>'
+    '<button id="btn-goes" onclick="synToggleLayer(\'goes\')" '
+    'style="font-size:9px;padding:2px 7px;cursor:pointer;border:1px solid #aaa;'
+    'border-radius:3px;background:#e8f0fe;color:#1a3a6a">GOES ✓</button>'
     '</div>'
 )
 m.get_root().html.add_child(Element(ts_bar_html))
@@ -3970,6 +4024,20 @@ ts_js = (
     '    } else {\n'
     '      styleEl.textContent = "";\n'
     '      btn3.textContent = "Stn ✓"; btn3.style.background = "#e8f0fe"; btn3.style.color = "#1a3a6a"; btn3.style.borderColor = "#aaa";\n'
+    '    }\n'
+    '  } else if (which === "goes") {\n'
+    '    var goesLayer = null;\n'
+    '    MAP.eachLayer(function(l){\n'
+    '      if (l.wmsParams && l.wmsParams.layers === "GOES-West_1km_DayVis-NightIR") goesLayer = l;\n'
+    '    });\n'
+    '    var btn4 = document.getElementById("btn-goes");\n'
+    '    if (!goesLayer) { if (btn4) { btn4.textContent = "GOES ✗"; btn4.style.background = "#f0f0f0"; } return; }\n'
+    '    if (MAP.hasLayer(goesLayer)) {\n'
+    '      MAP.removeLayer(goesLayer);\n'
+    '      if (btn4) { btn4.textContent = "GOES ✗"; btn4.style.background = "#f0f0f0"; }\n'
+    '    } else {\n'
+    '      goesLayer.addTo(MAP);\n'
+    '      if (btn4) { btn4.textContent = "GOES ✓"; btn4.style.background = "#e8f0fe"; }\n'
     '    }\n'
     '  }\n'
     '}\n'
