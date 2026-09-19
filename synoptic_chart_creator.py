@@ -1175,6 +1175,21 @@ def fetch_all_metars(station_codes, chunk_size=25, max_workers=6, hours=12):
         except concurrent.futures.TimeoutError:
             print(f'  ↻ Pass 2 timed out — skipping {len(silent_missing)} stations')
 
+    # Pass 3: SWOB for any station still without data (Canadian C*** only)
+    _have = set()
+    for _l in '\n'.join(raw_parts).splitlines():
+        _p = _l.strip().split()
+        if len(_p) >= 2:
+            _have.add(_p[1] if _p[0] in ('METAR', 'SPECI') else _p[0])
+    _still = [s for s in station_codes if s not in _have]
+    if _still:
+        print(f'  ↪ Pass 3: {len(_still)} stations still missing — trying SWOB')
+        _swob_text, _swob_lost = swob_fetch_chunk(_still, hours)
+        if _swob_text:
+            raw_parts.append(_swob_text)
+        _rescued = set(_still) - set(_swob_lost)
+        failed_codes = [c for c in failed_codes if c not in _rescued]
+
     return '\n'.join(raw_parts), failed_codes
 
 
@@ -1236,7 +1251,18 @@ def parse_metar_line(line, stations):
     if not re.match(r'^\d{6}Z$', ts_raw): return None
     day, hour, minute = int(ts_raw[0:2]), int(ts_raw[2:4]), int(ts_raw[4:6])
     if minute >= 35:
-        hour = (hour + 1) % 24; minute = 0
+        from datetime import datetime as _dtm, timedelta as _tdl, timezone as _tzn
+        _now = _dtm.now(_tzn.utc)
+        _y, _m = _now.year, _now.month
+        if day > _now.day + 1:              # obs is from the previous month
+            _m -= 1
+            if _m == 0: _m, _y = 12, _y - 1
+        try:
+            _t = _dtm(_y, _m, day, hour, 0, tzinfo=_tzn.utc) + _tdl(hours=1)
+            day, hour = _t.day, _t.hour
+        except ValueError:
+            hour = (hour + 1) % 24
+        minute = 0
     elif minute <= 25:
         minute = 0
     else:
@@ -3181,6 +3207,8 @@ function synExportCurrent() {
   setTimeout(synSavePNG, 400);
 }
 function synExportCurrentMetar() {
+  var keys = Object.keys(window).filter(function(k){return k.startsWith("map_");});
+  var MAP = window[keys[0]];
   var hadSlp = _synShowSlp, hadHL = _synShowHL;
   if (hadSlp) { _synShowSlp = false; _synSlpLayer.remove(); }
   if (hadHL)  { _synShowHL  = false; _synHLLayer.remove();  }
@@ -4669,6 +4697,8 @@ function synExportCurrent() {
   setTimeout(synSavePNG, 400);
 }
 function synExportCurrentMetar() {
+  var keys = Object.keys(window).filter(function(k){return k.startsWith("map_");});
+  var MAP = window[keys[0]];
   var hadSlp = _synShowSlp, hadHL = _synShowHL;
   if (hadSlp) { _synShowSlp = false; _synSlpLayer.remove(); }
   if (hadHL)  { _synShowHL  = false; _synHLLayer.remove();  }
@@ -5001,8 +5031,8 @@ else:
     print('synSavePNG replaced')
 
 # ── Ensure contours and H/L are visible ───────────────────────────────
-html = html.replace('var _synShowSlp = false;', 'var _synShowSlp = true;')
-html = html.replace('var _synShowHL  = false;', 'var _synShowHL  = true;')
+html = re.sub(r'var _synShowSlp\s*=\s*\w+;', 'var _synShowSlp = true;', html)
+html = re.sub(r'var _synShowHL\s*=\s*\w+;',  'var _synShowHL = true;',  html)
 
 # Always re-inject — strip previous injection block completely
 _body_idx = html.rfind('</body>')
@@ -5049,6 +5079,8 @@ function synExportCurrent() {
   setTimeout(synSavePNG, 400);
 }
 function synExportCurrentMetar() {
+  var keys = Object.keys(window).filter(function(k){return k.startsWith("map_");});
+  var MAP = window[keys[0]];
   var hadSlp = _synShowSlp, hadHL = _synShowHL;
   if (hadSlp) { _synShowSlp = false; _synSlpLayer.remove(); }
   if (hadHL)  { _synShowHL  = false; _synHLLayer.remove();  }
