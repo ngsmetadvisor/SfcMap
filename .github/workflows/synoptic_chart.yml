@@ -121,3 +121,30 @@ jobs:
           git add docs/
           git diff --cached --quiet ||             git commit -m "chore: synoptic chart ${STAMP} [skip ci]"
           git push origin main
+
+      # ── 9. Stage ONLY the files the site needs ───────────────────────────
+      - name: Stage Pages site
+        run: |
+          rm -rf _site && mkdir -p _site
+          cp docs/synoptic_map.html docs/index.html _site/
+          du -sh _site/* docs docs/archive . 2>/dev/null || true
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
