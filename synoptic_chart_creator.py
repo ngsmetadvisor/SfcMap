@@ -949,6 +949,158 @@ import concurrent.futures, time
 
 EXPECTED_HOURS = [0, 6, 12, 18]
 
+# ══ ECCC SWOB fallback (api.weather.gc.ca) — builds METAR-style lines ══
+from datetime import datetime, timezone, timedelta
+
+SWOB_BASE = 'https://api.weather.gc.ca/collections/swob-realtime/items'
+
+# cld_amt_code -> FEW/SCT/BKN/OVC only (remark not used).
+# 32=FEW was seen on CYYC. 2/4/6/8 follow the cloudRank table and are ASSUMED.
+SWOB_CLD_AMT = {2: 'FEW', 4: 'SCT', 6: 'BKN', 8: 'OVC', 32: 'FEW'}
+_swob_warned = set()
+
+def _swob_num(p, *keys):
+    for k in keys:
+        v = p.get(k)
+        try:
+            if v is not None:
+                return float(v)
+        except (TypeError, ValueError):
+            pass
+    return None
+
+def swob_wx(c):
+    '''WMO 4677 present-weather code -> METAR token (codes >= 100 are ignored and logged)'''
+    try:
+        c = int(float(c))
+    except (TypeError, ValueError):
+        return ''
+    if c >= 100:
+        if ('wx', c) not in _swob_warned:
+            _swob_warned.add(('wx', c))
+            print(f'  [SWOB] unmapped prsnt_wx code {c}')
+        return ''
+    table = {4: 'FU', 5: 'HZ', 10: 'BR', 50: '-DZ', 51: '-DZ', 52: 'DZ', 53: 'DZ',
+             54: '+DZ', 55: '+DZ', 56: '-FZDZ', 57: 'FZDZ', 58: 'RADZ', 59: 'RADZ',
+             60: '-RA', 61: '-RA', 62: 'RA', 63: 'RA', 64: '+RA', 65: '+RA',
+             66: '-FZRA', 67: 'FZRA', 68: 'RASN', 69: 'RASN',
+             70: '-SN', 71: '-SN', 72: 'SN', 73: 'SN', 74: '+SN', 75: '+SN',
+             76: 'IC', 77: 'SG', 78: 'IC', 79: 'PL',
+             80: '-SHRA', 81: 'SHRA', 82: '+SHRA', 83: 'SHRASN', 84: '+SHRASN',
+             85: '-SHSN', 86: 'SHSN', 87: 'SHGS', 88: 'SHGS', 89: 'SHGR', 90: 'SHGR'}
+    if 40 <= c <= 49: return 'FG'
+    if 95 <= c <= 99: return 'TS'
+    return table.get(c, '')
+
+def swob_cloud(p):
+    '''Cloud groups from cld_amt_code + cld_bas_hgt_N; VV from vert_vis. Remark not used.'''
+    vv = _swob_num(p, 'vert_vis')
+    if vv is not None and vv >= 0:
+        return [f'VV{int(round(vv * 3.28084 / 100)):03d}']
+    out = []
+    for i in range(1, 5):
+        h = _swob_num(p, f'cld_bas_hgt_{i}')
+        if h is None:
+            continue
+        code = p.get(f'cld_amt_code_{i}')
+        try:
+            amt = SWOB_CLD_AMT.get(int(float(code)))
+        except (TypeError, ValueError):
+            amt = None
+        if not amt:
+            if ('cld', code) not in _swob_warned:
+                _swob_warned.add(('cld', code))
+                print(f'  [SWOB] unknown cld_amt_code {code} at {round(h * 3.28084)} ft — layer dropped; add to SWOB_CLD_AMT')
+            continue
+        out.append(f'{amt}{int(round(h * 3.28084 / 100)):03d}')
+    return out
+
+def swob_to_metar_line(p):
+    icao = p.get('icao_stn_id-value')
+    if not icao or p.get('_is-minutely_obs-value') is True:
+        return None
+    try:
+        t = datetime.fromisoformat(str(p['date_tm-value']).replace('Z', '+00:00'))
+    except Exception:
+        return None
+    parts = [f'{t.day:02d}{t.hour:02d}{t.minute:02d}Z']
+
+    spd = _swob_num(p, 'avg_wnd_spd_10m_pst2mts', 'avg_wnd_spd_10m_pst10mts')
+    wdir = _swob_num(p, 'avg_wnd_dir_10m_pst2mts', 'avg_wnd_dir_10m_pst10mts')
+    gst = _swob_num(p, 'max_wnd_gst_spd_10m_pst10mts')
+    if spd is not None:
+        kt = min(99, int(round(spd / 1.852)))
+        if kt == 0:
+            parts.append('00000KT')
+        elif wdir is not None:
+            d = int(round(wdir / 10.0)) * 10
+            if d == 0: d = 360
+            gk = min(99, int(round(gst / 1.852))) if gst is not None else 0
+            parts.append(f'{d:03d}{kt:02d}' + (f'G{gk:02d}' if gk > kt else '') + 'KT')
+
+    vis = _swob_num(p, 'vis')
+    if vis is not None:
+        sm = vis / 1.609344
+        parts.append((str(int(round(sm))) if sm >= 10 else str(round(sm, 1))) + 'SM')
+
+    for i in (1, 2, 3):
+        w = swob_wx(p.get(f'prsnt_wx_{i}'))
+        if w: parts.append(w)
+
+    cl = swob_cloud(p)
+    parts.extend(cl if cl else ['CLR'])
+
+    tt, dd = _swob_num(p, 'air_temp'), _swob_num(p, 'dwpt_temp')
+    if tt is not None and dd is not None:
+        f = lambda v: ('M' if round(v) < 0 else '') + f'{abs(int(round(v))):02d}'
+        parts.append(f'{f(tt)}/{f(dd)}')
+
+    slp = _swob_num(p, 'mslp')
+    parts.append('RMK')
+    if slp is not None:
+        parts.append(f'SLP{int(round(slp * 10)) % 1000:03d}')
+    return f'METAR {icao} ' + ' '.join(parts)
+
+def swob_station_lines(icao, hours):
+    try:
+        r = requests.get(SWOB_BASE, params={
+            'f': 'json', 'lang': 'en', 'limit': hours + 12,
+            'sortby': '-date_tm-value', 'url': icao}, timeout=20)
+        r.raise_for_status()
+        cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
+        lines = []
+        for feat in r.json().get('features', []):
+            p = feat.get('properties') or {}
+            if p.get('icao_stn_id-value') != icao:
+                continue
+            try:
+                t = datetime.fromisoformat(str(p['date_tm-value']).replace('Z', '+00:00'))
+            except Exception:
+                continue
+            if t < cutoff:
+                continue
+            l = swob_to_metar_line(p)
+            if l: lines.append(l)
+        return lines
+    except Exception as e:
+        print(f'  [SWOB] {icao} failed: {e}')
+        return []
+
+def swob_fetch_chunk(codes, hours=12):
+    '''Fallback: Canadian (C***) stations only. K*** / P*** are not in SWOB.'''
+    can = [c for c in codes if re.match(r'^C[A-Z0-9]{3}$', c)]
+    non_can = [c for c in codes if c not in can]
+    if not can:
+        return '', codes
+    with concurrent.futures.ThreadPoolExecutor(max_workers=8) as ex:
+        results = list(ex.map(lambda c: swob_station_lines(c, hours), can))
+    lines = [l for r in results for l in r]
+    got = {r_[0].split()[1] for r_ in results if r_}
+    lost = non_can + [c for c in can if c not in got]
+    print(f'  ↪ SWOB fallback: {len(got)}/{len(can)} Canadian stations, {len(lines)} obs')
+    return '\n'.join(lines), lost
+
+
 def fetch_chunk(codes, hours=12, retries=3, backoff=2):
     for attempt in range(retries):
         try:
@@ -963,7 +1115,8 @@ def fetch_chunk(codes, hours=12, retries=3, backoff=2):
         except Exception as e:
             print(f'DEBUG exception: {e}')
             time.sleep(backoff * (attempt + 1))
-    return '', codes
+    print(f'aviationweather.gov failed for {len(codes)} stations — trying ECCC SWOB fallback')
+    return swob_fetch_chunk(codes, hours)
 
 def fetch_all_metars(station_codes, chunk_size=25, max_workers=6, hours=12):
     chunks = [station_codes[i:i+chunk_size]
