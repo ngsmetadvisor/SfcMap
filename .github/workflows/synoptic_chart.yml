@@ -69,7 +69,7 @@ jobs:
       # ── 6. Copy to docs/ for GitHub Pages ───────────────────────────────
       #       GitHub Pages serves from docs/ on the main branch.
       #       synoptic_map.html  = always the latest chart (stable URL)
-      #       archive/           = timestamped copies kept for history
+      #       archive/           = last 8 timestamped copies (older ones pruned)
       - name: Publish to GitHub Pages
         run: |
           STAMP=$(date -u +"%Y%m%d_%H%MZ")
@@ -83,6 +83,10 @@ jobs:
 
           # Timestamped archive copy
           cp output/synoptic_map.html "docs/archive/synoptic_map_${STAMP}.html"
+
+          # Keep only the 8 newest archive copies (Pages artifact limit is 1 GB).
+          # Deleted files are staged by `git add docs/` in the commit step.
+          ls -1 docs/archive/synoptic_map_*.html | sort | head -n -8 | xargs -r rm -f
 
           # Minimal index so the root URL isn't a blank 404
           cat > docs/index.html << 'HTML'
