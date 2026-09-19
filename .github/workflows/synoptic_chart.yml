@@ -84,9 +84,9 @@ jobs:
           # Timestamped archive copy
           cp output/synoptic_map.html "docs/archive/synoptic_map_${STAMP}.html"
 
-          # Keep only the 8 newest archive copies (Pages artifact limit is 1 GB).
+          # Keep only the newest archive copy (each file is ~150 MB; Pages limit is 1 GB).
           # Deleted files are staged by `git add docs/` in the commit step.
-          ls -1 docs/archive/synoptic_map_*.html | sort | head -n -8 | xargs -r rm -f
+          ls -1 docs/archive/synoptic_map_*.html | sort | head -n -1 | xargs -r rm -f
 
           # Minimal index so the root URL isn't a blank 404
           cat > docs/index.html << 'HTML'
