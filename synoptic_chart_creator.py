@@ -1910,23 +1910,28 @@ def parse_synop_fm12(line, icao, st):
         data_start = next(i for i, g in enumerate(groups) if g == '71024') + 1
     except StopIteration:
         data_start = 3
-    groups = groups[data_start:]
+    # iw = last digit of YYGGiw (0/1 = m/s, 3/4 = knots)
+    _iw = groups[1][-1] if len(groups) > 1 and re.match(r'^\d{5}$', groups[1]) else '4'
+    groups = groups[data_start:]   # groups[0] = iihVV, groups[1] = Nddff
 
     temp = dew = slp = wind_dir = wind_spd = None
 
-    for g in groups:
-        # Wind group: Nddff or /ddff — N or / then 4 digits
-        if re.match(r'^[\d/]\d{4}$', g) and wind_dir is None:
-            try:
-                dd_ = int(g[1:3]) * 10   # tens of degrees → degrees
-                ff  = int(g[3:5])
-                if 0 < dd_ <= 360:
-                    wind_dir = dd_
-                    wind_spd = ff
-            except: pass
+    if len(groups) > 1 and re.match(r'^[\d/]\d{4}$', groups[1]):
+        try:
+            dd_ = int(groups[1][1:3]) * 10
+            ff  = int(groups[1][3:5])
+            if _iw in ('0', '1'):                 # m/s → knots
+                ff = int(round(ff * 1.94384))
+            if dd_ == 0 and ff == 0:
+                wind_dir, wind_spd = 0, 0
+            elif 0 < dd_ <= 360:
+                wind_dir, wind_spd = dd_, ff
+        except ValueError:
+            pass
 
+    for g in groups[2:]:
         # 1sTTT — air temperature  (s=0 positive, s=1 negative)
-        elif re.match(r'^1[01]\d{3}$', g):
+        if re.match(r'^1[01]\d{3}$', g):
             try:
                 sign = -1 if g[1] == '1' else 1
                 temp = sign * int(g[2:]) / 10
@@ -2358,7 +2363,7 @@ m.get_root().html.add_child(Element(
     '        if(l.options.name==="Blank (borders only)" || (l._url&&l._url==="about:blank")){\n'
     '          blankLayer=l;\n'
     '        } else if(l.wmsParams && l.wmsParams.layers==="GOES-West_1km_DayVis-NightIR"){\n'
-    '          // leave alone — controlled by its own GOES toggle button\n'
+    '          window._synGoesLayer = l;  // keep a reference so the button can re-add it\n'
     '        } else {\n'
     '          others.push(l);\n'
     '        }\n'
@@ -2572,7 +2577,11 @@ ts_js = (
     '  if (!keys.length) { console.warn("synUpdateTS: map not ready"); return; }\n'
     '  var MAP = window[keys[0]];\n'
     '  if (!MAP || typeof MAP.removeLayer !== "function") { console.warn("synUpdateTS: invalid map"); return; }\n'
-'  if (_synStnLayer) { MAP.removeLayer(_synStnLayer); _synStnLayer = null; }\n'
+    '  if (window._synGoesLayer) {\n'
+    '    var _gt = synTsToUtc(ts);\n'
+    '    window._synGoesLayer.setParams({time: _gt.toISOString().slice(0,19) + "Z"});\n'
+    '  }\n'
+    '  if (_synStnLayer) { MAP.removeLayer(_synStnLayer); _synStnLayer = null; }\n'
     '  if (_synSlpLayer) { MAP.removeLayer(_synSlpLayer); _synSlpLayer = null; }\n'
     '  if (_synHLLayer)  { MAP.removeLayer(_synHLLayer);  _synHLLayer  = null; }\n'
     '  _synStnLayer = L.layerGroup();\n'
@@ -3856,7 +3865,7 @@ m.get_root().html.add_child(Element(
     '        if(l.options.name==="Blank (borders only)" || (l._url&&l._url==="about:blank")){\n'
     '          blankLayer=l;\n'
     '        } else if(l.wmsParams && l.wmsParams.layers==="GOES-West_1km_DayVis-NightIR"){\n'
-    '          // leave alone — controlled by its own GOES toggle button\n'
+    '          window._synGoesLayer = l;  // keep a reference so the button can re-add it\n'
     '        } else {\n'
     '          others.push(l);\n'
     '        }\n'
@@ -4070,7 +4079,11 @@ ts_js = (
     '  if (!keys.length) { console.warn("synUpdateTS: map not ready"); return; }\n'
     '  var MAP = window[keys[0]];\n'
     '  if (!MAP || typeof MAP.removeLayer !== "function") { console.warn("synUpdateTS: invalid map"); return; }\n'
-'  if (_synStnLayer) { MAP.removeLayer(_synStnLayer); _synStnLayer = null; }\n'
+    '  if (window._synGoesLayer) {\n'
+    '    var _gt = synTsToUtc(ts);\n'
+    '    window._synGoesLayer.setParams({time: _gt.toISOString().slice(0,19) + "Z"});\n'
+    '  }\n'
+    '  if (_synStnLayer) { MAP.removeLayer(_synStnLayer); _synStnLayer = null; }\n'
     '  if (_synSlpLayer) { MAP.removeLayer(_synSlpLayer); _synSlpLayer = null; }\n'
     '  if (_synHLLayer)  { MAP.removeLayer(_synHLLayer);  _synHLLayer  = null; }\n'
     '  _synStnLayer = L.layerGroup();\n'
@@ -4207,10 +4220,7 @@ ts_js = (
     '      btn3.textContent = "Stn ✓"; btn3.style.background = "#e8f0fe"; btn3.style.color = "#1a3a6a"; btn3.style.borderColor = "#aaa";\n'
     '    }\n'
     '  } else if (which === "goes") {\n'
-    '    var goesLayer = null;\n'
-    '    MAP.eachLayer(function(l){\n'
-    '      if (l.wmsParams && l.wmsParams.layers === "GOES-West_1km_DayVis-NightIR") goesLayer = l;\n'
-    '    });\n'
+    '    var goesLayer = window._synGoesLayer || null;\n'
     '    var btn4 = document.getElementById("btn-goes");\n'
     '    if (!goesLayer) { if (btn4) { btn4.textContent = "GOES ✗"; btn4.style.background = "#f0f0f0"; } return; }\n'
     '    if (MAP.hasLayer(goesLayer)) {\n'
