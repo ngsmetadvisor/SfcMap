@@ -949,7 +949,6 @@ if ec_fetch_errors:
 # @title
 # ── Cell 4 . Fetch live METARs from aviationweather.gov ───────
 import concurrent.futures, time
-from IPython.display import display, HTML
 
 EXPECTED_HOURS = [0, 6, 12, 18]
 
@@ -1545,7 +1544,6 @@ print(f'  SLP: {slp_count}  Wind: {wind_count}  Temp: {temp_count}')
 
 # ── Summary table ─────────────────────────────────────────────────────────────
 import pandas as pd
-from IPython.display import display, HTML
 
 print(f'DEBUG: metar_records has {len(metar_records)} entries before building _df')
 _df = pd.DataFrame([{
@@ -2000,7 +1998,6 @@ except Exception as e:
     print(f'✗ Fort Vermillion fetch failed: {e}')
 
 import pandas as pd
-from IPython.display import display, HTML
 
 _fv_df = pd.DataFrame([{
     'Timestamp':  r['timestamp'],
