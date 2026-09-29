@@ -943,9 +943,13 @@ if ec_fetch_errors:
 
 
 
+
+
+
 # @title
 # ── Cell 4 . Fetch live METARs from aviationweather.gov ───────
 import concurrent.futures, time
+from IPython.display import display, HTML
 
 EXPECTED_HOURS = [0, 6, 12, 18]
 
@@ -1175,21 +1179,6 @@ def fetch_all_metars(station_codes, chunk_size=25, max_workers=6, hours=12):
         except concurrent.futures.TimeoutError:
             print(f'  ↻ Pass 2 timed out — skipping {len(silent_missing)} stations')
 
-    # Pass 3: SWOB for any station still without data (Canadian C*** only)
-    _have = set()
-    for _l in '\n'.join(raw_parts).splitlines():
-        _p = _l.strip().split()
-        if len(_p) >= 2:
-            _have.add(_p[1] if _p[0] in ('METAR', 'SPECI') else _p[0])
-    _still = [s for s in station_codes if s not in _have]
-    if _still:
-        print(f'  ↪ Pass 3: {len(_still)} stations still missing — trying SWOB')
-        _swob_text, _swob_lost = swob_fetch_chunk(_still, hours)
-        if _swob_text:
-            raw_parts.append(_swob_text)
-        _rescued = set(_still) - set(_swob_lost)
-        failed_codes = [c for c in failed_codes if c not in _rescued]
-
     return '\n'.join(raw_parts), failed_codes
 
 
@@ -1251,18 +1240,7 @@ def parse_metar_line(line, stations):
     if not re.match(r'^\d{6}Z$', ts_raw): return None
     day, hour, minute = int(ts_raw[0:2]), int(ts_raw[2:4]), int(ts_raw[4:6])
     if minute >= 35:
-        from datetime import datetime as _dtm, timedelta as _tdl, timezone as _tzn
-        _now = _dtm.now(_tzn.utc)
-        _y, _m = _now.year, _now.month
-        if day > _now.day + 1:              # obs is from the previous month
-            _m -= 1
-            if _m == 0: _m, _y = 12, _y - 1
-        try:
-            _t = _dtm(_y, _m, day, hour, 0, tzinfo=_tzn.utc) + _tdl(hours=1)
-            day, hour = _t.day, _t.hour
-        except ValueError:
-            hour = (hour + 1) % 24
-        minute = 0
+        hour = (hour + 1) % 24; minute = 0
     elif minute <= 25:
         minute = 0
     else:
@@ -1567,7 +1545,7 @@ print(f'  SLP: {slp_count}  Wind: {wind_count}  Temp: {temp_count}')
 
 # ── Summary table ─────────────────────────────────────────────────────────────
 import pandas as pd
- 
+from IPython.display import display, HTML
 
 print(f'DEBUG: metar_records has {len(metar_records)} entries before building _df')
 _df = pd.DataFrame([{
@@ -1843,6 +1821,13 @@ display(HTML(f'''
 import requests, re
 from datetime import datetime, timezone as _tz
 
+# @title
+# ── Cell 5c . Fetch Fort Vermillion (71024) from ogimet ───────────────────────
+import requests, re
+from datetime import datetime, timezone as _tz
+
+INCLUDE_FV = False   # ← toggle: True = fetch/plot Fort Vermillion, False = skip entirely
+
 OGIMET_SYNOP_URL = 'https://www.ogimet.com/cgi-bin/getsynop'
 FV_WMO   = '71024'
 FV_ICAO  = 'CXFV'   # synthetic key — not a real ICAO, but unique in STATIONS
@@ -1851,14 +1836,18 @@ FV_LON   = -116.0402 #offset for better viewing. true lon -116.0402
 FV_NAME  = 'Fort Vermillion, Alta'
 
 # Register into STATIONS so downstream cells see it
-STATIONS[FV_ICAO] = {
-    'icao':   FV_ICAO,
-    'name':   FV_NAME,
-    'lat':    FV_LAT,
-    'lon':    FV_LON,
-    'tier':   0,
-    'source': 'synop',
-}
+if INCLUDE_FV:
+    STATIONS[FV_ICAO] = {
+        'icao':   FV_ICAO,
+        'name':   FV_NAME,
+        'lat':    FV_LAT,
+        'lon':    FV_LON,
+        'tier':   0,
+        'source': 'synop',
+    }
+else:
+    STATIONS.pop(FV_ICAO, None)   # in case a previous run registered it
+    print('Fort Vermillion disabled (INCLUDE_FV = False)')
 
 def fetch_ogimet_synop(wmo_id, ndays=2):
     now = datetime.now(_tz.utc)
@@ -1876,11 +1865,12 @@ def fetch_ogimet_synop(wmo_id, ndays=2):
         print(f'URL error, by pass this station: {wmo_id}')
         return None
 
-result = fetch_ogimet_synop(FV_WMO)
-if result is None:
-    print(f'Skipping Fort Vermillion — fetch failed')
-else:
-    print(result[:1000])
+if INCLUDE_FV:
+    result = fetch_ogimet_synop(FV_WMO)
+    if result is None:
+        print(f'Skipping Fort Vermillion — fetch failed')
+    else:
+        print(result[:1000])
 
 
 def parse_synop_fm12(line, icao, st):
@@ -1910,8 +1900,8 @@ def parse_synop_fm12(line, icao, st):
         data_start = next(i for i, g in enumerate(groups) if g == '71024') + 1
     except StopIteration:
         data_start = 3
-    # iw = last digit of YYGGiw (0/1 = m/s, 3/4 = knots)
-    _iw = groups[1][-1] if len(groups) > 1 and re.match(r'^\d{5}$', groups[1]) else '4'
+    # iw = last digit of YYGGiw, the group just before the station number (0/1 = m/s, 3/4 = knots)
+    _iw = groups[data_start - 1][-1] if data_start >= 1 and re.match(r'^\d{5}$', groups[data_start - 1]) else '4'
     groups = groups[data_start:]   # groups[0] = iihVV, groups[1] = Nddff
 
     temp = dew = slp = wind_dir = wind_spd = None
@@ -1980,11 +1970,14 @@ def parse_synop_fm12(line, icao, st):
     )
 
 # ── Fetch and parse ───────────────────────────────────────────────────────────
-print(f'Fetching Fort Vermillion (WMO {FV_WMO}) from ogimet...')
 fv_records = []
+if INCLUDE_FV:
+    print(f'Fetching Fort Vermillion (WMO {FV_WMO}) from ogimet...')
 try:
-    raw = fetch_ogimet_synop(FV_WMO, ndays=2)
-    if raw is None:
+    raw = fetch_ogimet_synop(FV_WMO, ndays=2) if INCLUDE_FV else None
+    if not INCLUDE_FV:
+        pass
+    elif raw is None:
         print(f'Skipping Fort Vermillion — fetch returned no data')
     else:
         for line in raw.splitlines():
@@ -2007,7 +2000,7 @@ except Exception as e:
     print(f'✗ Fort Vermillion fetch failed: {e}')
 
 import pandas as pd
- 
+from IPython.display import display, HTML
 
 _fv_df = pd.DataFrame([{
     'Timestamp':  r['timestamp'],
@@ -2028,7 +2021,7 @@ if fv_records:
     if _fv_df['SLP(hPa)'].notna().any():
         _fv_styler = _fv_styler.background_gradient(subset=['SLP(hPa)'], cmap='coolwarm')
     display(HTML(_fv_styler.format(na_rep='—', precision=1).to_html()))
-else:
+elif INCLUDE_FV:
     display(HTML('<div style="font-family:monospace;color:#888;">Fort Vermillion — no data available</div>'))
     
 
