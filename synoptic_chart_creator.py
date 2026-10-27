@@ -957,9 +957,6 @@ from datetime import datetime, timezone, timedelta
 
 SWOB_BASE = 'https://api.weather.gc.ca/collections/swob-realtime/items'
 
-# cld_amt_code -> FEW/SCT/BKN/OVC only (remark not used).
-# 32=FEW was seen on CYYC. 2/4/6/8 follow the cloudRank table and are ASSUMED.
-SWOB_CLD_AMT = {2: 'FEW', 4: 'SCT', 6: 'BKN', 8: 'OVC', 32: 'FEW'}
 _swob_warned = set()
 
 def _swob_num(p, *keys):
@@ -995,27 +992,45 @@ def swob_wx(c):
     if 95 <= c <= 99: return 'TS'
     return table.get(c, '')
 
+# cld_amt_code — INFERRED from live data (Oct 2026), not from ECCC documentation:
+# 31–39 = that layer's own oktas + 31 (e.g. 32 = 1 okta, 38 = 7 oktas, 39 = 8 oktas).
+# Layers are summed bottom-up into cumulative sky cover, as Canadian METARs code it.
+# 0 = no layer. Anything else (e.g. 1, 3 from automated stations) is logged once per code.
+# The remark is NOT used.
+def swob_layer_oktas(code):
+    try:
+        c = int(float(code))
+    except (TypeError, ValueError):
+        return None
+    return min(8, c - 31) if 31 <= c <= 39 else None
+
 def swob_cloud(p):
-    '''Cloud groups from cld_amt_code + cld_bas_hgt_N; VV from vert_vis. Remark not used.'''
+    '''Cloud groups from cld_amt_code + cld_bas_hgt_N; VV from vert_vis (unit from vert_vis-uom). Remark not used.'''
     vv = _swob_num(p, 'vert_vis')
     if vv is not None and vv >= 0:
-        return [f'VV{int(round(vv * 3.28084 / 100)):03d}']
-    out = []
+        ft = vv if 'ft' in str(p.get('vert_vis-uom') or '').lower() else vv * 3.28084
+        return [f'VV{int(round(ft / 100)):03d}']
+    out = []; cum = 0
     for i in range(1, 5):
         h = _swob_num(p, f'cld_bas_hgt_{i}')
         if h is None:
             continue
         code = p.get(f'cld_amt_code_{i}')
         try:
-            amt = SWOB_CLD_AMT.get(int(float(code)))
+            if int(float(code)) == 0:
+                continue                     # no layer
         except (TypeError, ValueError):
-            amt = None
-        if not amt:
+            pass
+        okt = swob_layer_oktas(code)
+        if okt is None:
             if ('cld', code) not in _swob_warned:
                 _swob_warned.add(('cld', code))
-                print(f'  [SWOB] unknown cld_amt_code {code} at {round(h * 3.28084)} ft — layer dropped; add to SWOB_CLD_AMT')
+                print(f'  [SWOB] unknown cld_amt_code {code} at {round(h * 3.28084)} ft — layer dropped')
             continue
-        out.append(f'{amt}{int(round(h * 3.28084 / 100)):03d}')
+        cum = min(8, cum + okt)
+        amt = 'OVC' if cum >= 8 else 'BKN' if cum >= 5 else 'SCT' if cum >= 3 else 'FEW' if cum >= 1 else None
+        if amt:
+            out.append(f'{amt}{int(round(h * 3.28084 / 100)):03d}')
     return out
 
 def swob_to_metar_line(p):
@@ -1068,7 +1083,7 @@ def swob_station_lines(icao, hours):
     try:
         r = requests.get(SWOB_BASE, params={
             'f': 'json', 'lang': 'en', 'limit': hours + 12,
-            'sortby': '-date_tm-value', 'url': icao}, timeout=20)
+            'sortby': '-date_tm-value', 'icao_stn_id-value': icao}, timeout=20)
         r.raise_for_status()
         cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
         lines = []
@@ -1274,11 +1289,12 @@ def parse_metar_line(line, stations):
                 except: vis = None
             break
 
-    cloud_re = re.compile(r'^(FEW|SCT|BKN|OVC|VV)(\d{3})')
+    cloud_re = re.compile(r'^(FEW|SCT|BKN|OVC|VV)(\d{3}|///)')
     clouds = []
     for p in rest:
         m = cloud_re.match(p)
-        if m: clouds.append({'cover': m[1], 'height': int(m[2]), 'raw': p})
+        # VV/// = sky obscured, height not reported → treated as ceiling 0 (LIFR)
+        if m: clouds.append({'cover': m[1], 'height': int(m[2]) if m[2].isdigit() else 0, 'raw': p})
     clouds.sort(key=lambda c: c['height'])
     clr = any(p in ('CLR', 'SKC', 'CAVOK') for p in rest)
     has_sky_obs = clr or bool(clouds)
