@@ -1185,7 +1185,7 @@ def fetch_all_metars(station_codes, chunk_size=25, max_workers=6, hours=12):
         try:
             with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as ex:
                 futures2 = {ex.submit(fetch_chunk, c, hours, 2, 1): c for c in retry_chunks}
-                for fut in concurrent.futures.as_completed(futures2, timeout=10):
+                for fut in concurrent.futures.as_completed(futures2, timeout=90):
                     text, failed = fut.result()
                     if text:  raw_parts.append(text)
                     if failed: failed_codes.extend(failed)
@@ -3251,6 +3251,8 @@ function synToggleSvgForMetar(hide, keys) {
   }
 }
 function synExportMetar() {
+  var keys = Object.keys(window).filter(function(k){return k.startsWith("map_");});
+  var MAP = window[keys[0]];
   var hadSlp = _synShowSlp, hadHL = _synShowHL;
   if (hadSlp) { _synShowSlp = false; _synSlpLayer.remove(); }
   if (hadHL)  { _synShowHL  = false; _synHLLayer.remove();  }
@@ -4742,6 +4744,8 @@ function synToggleSvgForMetar(hide, keys) {
   }
 }
 function synExportMetar() {
+  var keys = Object.keys(window).filter(function(k){return k.startsWith("map_");});
+  var MAP = window[keys[0]];
   var hadSlp = _synShowSlp, hadHL = _synShowHL;
   if (hadSlp) { _synShowSlp = false; _synSlpLayer.remove(); }
   if (hadHL)  { _synShowHL  = false; _synHLLayer.remove();  }
@@ -5124,6 +5128,8 @@ function synToggleSvgForMetar(hide, keys) {
   }
 }
 function synExportMetar() {
+  var keys = Object.keys(window).filter(function(k){return k.startsWith("map_");});
+  var MAP = window[keys[0]];
   var hadSlp = _synShowSlp, hadHL = _synShowHL;
   if (hadSlp) { _synShowSlp = false; _synSlpLayer.remove(); }
   if (hadHL)  { _synShowHL  = false; _synHLLayer.remove();  }
